@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/luna
+    username: root
+    password: Passw0rd
+    type: com.zaxxer.hikari.HikariDataSource
+mybatis-flex:
+  global-config:
+    print-banner: false
+    logic-delete-column: deleted
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+logging:
+  level:
+    web: debug # Web 模块日志级别
+    org.springframework.web: DEBUG  # Spring Web 框架日志
+    org.springframework.boot.web.servlet: DEBUG  # Servlet 容器日志
+    org.springframework.security: DEBUG
+jwt:
+  private.key: classpath:app.key
+  public.key: classpath:app.pub

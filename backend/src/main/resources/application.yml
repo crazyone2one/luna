@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: luna
+  profiles:
+    active: dev

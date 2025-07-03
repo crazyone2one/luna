@@ -5,6 +5,7 @@ import cn.master.luna.exception.IResultCode;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -61,6 +62,14 @@ public class RestControllerExceptionHandler {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResultHandler.error(code, message, e.getMessage()));
         }
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler({AuthorizationDeniedException.class})
+    public ResponseEntity<ResultHandler> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN.value())
+                .body(ResultHandler.error(CustomHttpResultCode.FORBIDDEN.getCode(),
+                        e.getMessage(), getStackTraceAsString(e)));
     }
 
     @ExceptionHandler({Exception.class})

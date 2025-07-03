@@ -23,13 +23,9 @@ yarn-error.log*
 *.sln
 *.sw?
 
-
-app/src/main/resources/static
-app/src/main/resources/public
-
-
 target
 .settings
 .project
 .classpath
 .factorypath
+/src/main/resources/static/

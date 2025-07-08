@@ -34,8 +34,14 @@ export const alovaInstance = createAlova({
         // 请求失败的拦截器
         // 请求错误时将会进入该拦截器。
         // 第二个参数为当前请求的method实例，你可以用它同步请求前后的配置信息
-        onError: (err, _method) => {
+        onError: (err, method) => {
+            if (import.meta.env.MODE === 'development') {
+                console.error('[Alova Error]', err, method)
+            }
             alert(err.message);
         },
+        onComplete: async _method => {
+            // 处理请求完成逻辑
+        }
     }
 });

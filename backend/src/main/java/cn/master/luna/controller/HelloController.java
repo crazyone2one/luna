@@ -31,7 +31,7 @@ public class HelloController {
         this.authenticationManager = authenticationManager;
     }
 
-    @PreAuthorize("hasAuthority('1project_admin')")
+    @PreAuthorize("hasAuthority('project_admin')")
     @GetMapping("/info")
     public String hello(Authentication authentication) {
         return "Hello, " + authentication.getName() + "!";
@@ -46,7 +46,7 @@ public class HelloController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         Instant now = Instant.now();
-        long expiry = 60;
+        long expiry = 300L;
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));

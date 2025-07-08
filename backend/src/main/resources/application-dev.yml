@@ -4,6 +4,23 @@ spring:
     username: root
     password: Passw0rd
     type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-test-query: SELECT 1
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      org:
+        quartz:
+          jobStore:
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            misfireThreshold: 60000
+  data:
+    redis:
+      host: localhost
+      database: 3
+
 mybatis-flex:
   global-config:
     print-banner: false

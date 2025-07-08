@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint(restAuthenticationEntryPoint));
         http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.logout(logout -> logout.logoutSuccessUrl("/"));
         return http.build();
     }
 

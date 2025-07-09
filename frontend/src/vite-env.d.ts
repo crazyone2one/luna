@@ -12,7 +12,17 @@ declare module '*.vue' {
 interface ImportMetaEnv {
     readonly VITE_API_BASE_URL: string;
     readonly VITE_DEV_DOMAIN: string; // 开发环境域名
+    readonly VITE_APP_TITLE: string
+    readonly VITE_APP_TOKEN_STORAGE: 'sessionStorage' | 'localStorage'
 }
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
+interface Window {
+    $loadingBar?: import('naive-ui').LoadingBarProviderInst
+    $dialog: import('naive-ui').DialogProviderInst
+    $message: import('naive-ui').MessageProviderInst
+    $notification: import('naive-ui').NotificationProviderInst
+}
+
+type Layout = 'base' | 'blank'

@@ -4,10 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Vue + TS</title>
+    <title>Loading...</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+        <style>
+            :root { --bg-color: #fff; --fg-color: #005b9c; }
+            @media (prefers-color-scheme: dark) { :root { --bg-color: #000; --fg-color: #dff0fc; } }
+            body { padding: 2rem; background: var(--bg-color); text-align: center; }
+            svg { margin-top: 40vh; max-width: 500px; }
+            path { fill: var(--fg-color); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; --interval: 0.1s; }
+            path:nth-child(1) { animation-delay: calc(var(--interval) * 0); }
+            path:nth-child(2) { animation-delay: calc(var(--interval) * 1); }
+            path:nth-child(3) { animation-delay: calc(var(--interval) * 2); }
+            path:nth-child(4) { animation-delay: calc(var(--interval) * 3); }
+            path:nth-child(5) { animation-delay: calc(var(--interval) * 4); }
+            path:nth-child(6) { animation-delay: calc(var(--interval) * 5); }
+            path:nth-child(7) { animation-delay: calc(var(--interval) * 6); }
+            path:nth-child(8) { animation-delay: calc(var(--interval) * 7); }
+            @keyframes pulse { 50% { opacity: 0.5; } }
+        </style>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

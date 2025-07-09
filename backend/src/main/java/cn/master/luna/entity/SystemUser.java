@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户 实体类。
@@ -123,4 +124,6 @@ public class SystemUser implements Serializable {
     @Schema(description = "是否删除")
     private Boolean deleted;
 
+    @Column(ignore = true)
+    private List<String> roleIds;
 }

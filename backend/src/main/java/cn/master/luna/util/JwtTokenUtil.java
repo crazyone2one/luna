@@ -2,6 +2,7 @@ package cn.master.luna.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,8 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    private static final long EXPIRE_DURATION = 24 * 60 * 60 * 1000L; // Hour 24
+    @Value("${jwt.expiration}")
+    private int jwtExpirationMs;
 
     SecretKey key = Jwts.SIG.HS512.key().build();
 
@@ -30,7 +32,7 @@ public class JwtTokenUtil {
                 .add(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EXPIRE_DURATION))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .and()
                 .signWith(key)
                 .compact();

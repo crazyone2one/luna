@@ -13,6 +13,7 @@ interface ImportMetaEnv {
     readonly VITE_API_BASE_URL: string;
     readonly VITE_DEV_DOMAIN: string; // 开发环境域名
     readonly VITE_APP_TITLE: string
+    readonly VITE_APP_BASE_API: string;
     readonly VITE_APP_TOKEN_STORAGE: 'sessionStorage' | 'localStorage'
 }
 interface ImportMeta {

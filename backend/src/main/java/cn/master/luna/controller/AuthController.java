@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "登录")
 @RestController
 @RequestMapping("/auth")
-public class LoginController {
+public class AuthController {
 
     private final UserLoginService userLoginService;
 
-    public LoginController(UserLoginService userLoginService) {
+    public AuthController(UserLoginService userLoginService) {
         this.userLoginService = userLoginService;
     }
 

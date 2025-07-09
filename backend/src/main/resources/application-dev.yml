@@ -37,5 +37,5 @@ logging:
     org.springframework.boot.web.servlet: DEBUG  # Servlet 容器日志
     org.springframework.security: DEBUG
 jwt:
-  private.key: classpath:app.key
-  public.key: classpath:app.pub
+  expiration: 3600000
+  refreshExpirationMs: 86400000

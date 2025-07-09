@@ -1,7 +1,7 @@
 package cn.master.luna.service.impl;
 
 import cn.master.luna.constants.UserRoleType;
-import cn.master.luna.controller.LoginController;
+import cn.master.luna.controller.AuthController;
 import cn.master.luna.entity.*;
 import cn.master.luna.entity.dto.UserDTO;
 import cn.master.luna.entity.dto.UserRolePermissionDTO;
@@ -47,7 +47,7 @@ public class UserLoginServiceImpl implements UserLoginService {
     private final SystemUserMapper systemUserMapper;
 
     @Override
-    public ResultHandler login(LoginController.LoginRequest request) {
+    public ResultHandler login(AuthController.LoginRequest request) {
         Authentication authenticationRequest =
                 UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
         Authentication authentication = authenticationManager.authenticate(authenticationRequest);

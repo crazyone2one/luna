@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import BaseModal from '/@/components/BaseModal.vue'
+import BaseModal from '/src/components/BaseModal.vue'
 import {type FormInst} from 'naive-ui'
 import {ref} from 'vue'
 import {useForm} from 'alova/client'
-import {fetchCreateSchedule} from '/@/api/system/task.ts'
+import {fetchCreateSchedule} from '/src/api/system/task.ts'
 
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false})
 const formRef = ref<FormInst | null>(null)

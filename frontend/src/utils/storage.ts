@@ -14,3 +14,7 @@ export const set = (key: string, value: unknown): void => {
 export const remove = (key: string): void => {
     localStorage.removeItem(key)
 }
+
+export const clearToken = () => {
+    remove('token');
+};

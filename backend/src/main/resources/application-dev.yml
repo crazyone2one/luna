@@ -6,6 +6,10 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       connection-test-query: SELECT 1
+  data:
+    redis:
+      host: localhost
+      database: 3
   quartz:
     job-store-type: jdbc
     jdbc:
@@ -13,13 +17,16 @@ spring:
     properties:
       org:
         quartz:
+          scheduler:
+#            instanceName: spring-boot-quartz
+            instanceId: AUTO #默认主机名和时间戳生成实例ID,可以是任何字符串，但对于所有调度程序来说，必须是唯一的 对应qrtz_scheduler_state INSTANCE_NAME字段
           jobStore:
+#            class: org.springframework.scheduling.quartz.LocalDataSourceJobStore #持久化配置
             driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            misfireThreshold: 60000
-  data:
-    redis:
-      host: localhost
-      database: 3
+          threadPool:
+            threadCount: 10
+            threadsInheritContextClassLoaderOfInitializingThread: true
+
 
 mybatis-flex:
   global-config:

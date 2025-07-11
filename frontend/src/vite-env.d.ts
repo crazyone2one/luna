@@ -4,11 +4,7 @@ interface ViteTypeOptions {
     // 这样就不允许有未知的键值了。
     strictImportMetaEnv: unknown;
 }
-declare module '*.vue' {
-    import {DefineComponent} from 'vue';
-    const component: DefineComponent<{}, {}, any>;
-    export default component;
-}
+
 interface ImportMetaEnv {
     readonly VITE_API_BASE_URL: string;
     readonly VITE_DEV_DOMAIN: string; // 开发环境域名
@@ -19,11 +15,16 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
-interface Window {
-    $loadingBar?: import('naive-ui').LoadingBarProviderInst
-    $dialog: import('naive-ui').DialogProviderInst
-    $message: import('naive-ui').MessageProviderInst
-    $notification: import('naive-ui').NotificationProviderInst
+declare module "*.vue" {
+    import type {DialogProviderInst, MessageProviderInst, NotificationProviderInst,} from 'naive-ui';
+    import {DefineComponent} from 'vue';
+    global {
+        interface Window {
+            $message: MessageProviderInst;
+            $dialog: DialogProviderInst;
+            $notification: NotificationProviderInst;
+        }
+    }
+    const component: DefineComponent;
+    export default component;
 }
-
-type Layout = 'base' | 'blank'

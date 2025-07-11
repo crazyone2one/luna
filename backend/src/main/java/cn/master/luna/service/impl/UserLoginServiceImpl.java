@@ -10,6 +10,7 @@ import cn.master.luna.exception.CustomException;
 import cn.master.luna.handler.ResultHandler;
 import cn.master.luna.mapper.SystemUserMapper;
 import cn.master.luna.service.UserLoginService;
+import cn.master.luna.util.JwtTokenUtil;
 import com.mybatisflex.core.query.QueryChain;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
@@ -19,15 +20,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,9 +38,9 @@ import static cn.master.luna.entity.table.UserRoleRelationTableDef.USER_ROLE_REL
 @Service
 @RequiredArgsConstructor
 public class UserLoginServiceImpl implements UserLoginService {
-    private final JwtEncoder encoder;
     private final AuthenticationManager authenticationManager;
     private final SystemUserMapper systemUserMapper;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @Override
     public ResultHandler login(AuthController.LoginRequest request) {
@@ -54,13 +50,12 @@ public class UserLoginServiceImpl implements UserLoginService {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
-        JwtClaimsSet claims = getJwtClaimsSet(authentication);
-        String tokenValue = this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        String tokenValue = jwtTokenUtil.generateToken(request.username());
         UserDTO userDTO = QueryChain.of(SystemUser.class).where(SystemUser::getName).eq(request.username()).oneAs(UserDTO.class);
         autoSwitch(userDTO);
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("token", tokenValue);
-        result.put("userInfo", userDTO);
+        result.put("access_token", tokenValue);
+        result.put("userInfo", getUserDTO(userDTO.getId()));
         return ResultHandler.success(result);
     }
 
@@ -352,20 +347,5 @@ public class UserLoginServiceImpl implements UserLoginService {
     private boolean isSuperUser(String id) {
         return QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(id)
                 .and(USER_ROLE_RELATION.ROLE_ID.eq("admin"))).exists();
-    }
-
-    private static JwtClaimsSet getJwtClaimsSet(Authentication authentication) {
-        Instant now = Instant.now();
-        long expiry = 300L;
-        String scope = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
-        return JwtClaimsSet.builder()
-                .issuer("self")
-                .issuedAt(now)
-                .expiresAt(now.plusSeconds(expiry))
-                .subject(authentication.getName())
-                .claim("scope", scope)
-                .build();
     }
 }

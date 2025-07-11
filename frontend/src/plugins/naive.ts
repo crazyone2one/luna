@@ -5,12 +5,12 @@ import {
     NBadge,
     NButton,
     NCard,
-    NConfigProvider,
-    NDialogProvider,
+    NDataTable,
     NDropdown,
     NForm,
     NFormItem,
-    NGlobalStyle,
+    NFormItemGi,
+    NGrid,
     NIcon,
     NInput,
     NLayout,
@@ -18,12 +18,11 @@ import {
     NLayoutFooter,
     NLayoutHeader,
     NLayoutSider,
-    NLoadingBarProvider,
     NMenu,
-    NMessageProvider,
     NP,
     NResult,
     NSpace,
+    NSpin,
     NText,
     NTooltip
 } from 'naive-ui'
@@ -32,9 +31,9 @@ import {Home, LogOut, Menu as MenuIcon, Moon, Settings,} from '@vicons/ionicons5
 // 注册常用组件
 const naive = create({
     components: [
-        NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter, NGlobalStyle, NLoadingBarProvider,
+        NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
-        NMessageProvider, NDialogProvider, NConfigProvider, NResult, NCard, NForm, NFormItem, NInput, NA, NText, NP, NSpace
+        NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin
     ]
 })
 

@@ -26,6 +26,7 @@ export const alovaInstance = createAlova({
         // 第二个参数为当前请求的method实例，你可以用它同步请求前后的配置信息
         onSuccess: async (response, _method) => {
             if (response.status >= 400) {
+                window.$message.error(response.statusText)
                 throw new Error(response.statusText);
             }
             const json = await response.json();

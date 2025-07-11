@@ -25,7 +25,8 @@ const menuOptions: MenuOption[] = [
     key: 'settings',
     children: [
       {label: '基础设置', key: 'settings-base', path: '/settings/base'},
-      {label: '安全设置', key: 'settings-security', path: '/settings/security'}
+      {label: () => h(RouterLink, {to: {name: 'Task'}}, {default: () => '任务中心'}),
+        key: 'task-center', path: '/settings/task'}
     ]
   }
 ]

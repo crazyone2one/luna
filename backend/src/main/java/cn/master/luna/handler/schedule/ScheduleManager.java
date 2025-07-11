@@ -74,6 +74,16 @@ public class ScheduleManager {
             throw new CustomException(e);
         }
     }
+    public void pauseJob(JobKey jobKey) {
+        try {
+            log.info("pauseJob: {},{}", jobKey.getName(), jobKey.getGroup());
+            // 暂停任务
+            scheduler.pauseJob(jobKey);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new CustomException(e);
+        }
+    }
 
     public static void startJobs(Scheduler schedule) {
         try {

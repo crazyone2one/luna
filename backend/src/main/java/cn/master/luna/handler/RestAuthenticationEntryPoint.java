@@ -38,7 +38,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         } else {
             message = (message != null) ? message : "Unexpected error occurred";
         }
-        ResultHandler error = ResultHandler.error(statusCode, message, authException.getCause().getMessage());
+        ResultHandler error = ResultHandler.error(statusCode, message, authException.getMessage());
         response.setStatus(statusCode);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

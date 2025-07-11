@@ -121,4 +121,8 @@ public class SystemSchedule implements Serializable {
     private Boolean deleted;
     @Schema(description = "业务ID")
     private Long num;
+
+    @Column(ignore = true)
+    @Schema(description = "下次执行时间")
+    private Long nextTime;
 }

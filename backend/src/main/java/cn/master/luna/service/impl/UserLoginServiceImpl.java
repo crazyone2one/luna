@@ -55,7 +55,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         autoSwitch(userDTO);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("access_token", tokenValue);
-        result.put("userInfo", userDTO);
+        result.put("userInfo", getUserDTO(userDTO.getId()));
         return ResultHandler.success(result);
     }
 

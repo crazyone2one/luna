@@ -3,6 +3,7 @@ package cn.master.luna.controller;
 import cn.master.luna.constants.ScheduleResourceType;
 import cn.master.luna.constants.ScheduleType;
 import cn.master.luna.entity.SystemSchedule;
+import cn.master.luna.entity.request.SchedulePageRequest;
 import cn.master.luna.job.DemoJob;
 import cn.master.luna.service.SystemScheduleService;
 import cn.master.luna.util.IDGenerator;
@@ -12,8 +13,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.quartz.JobKey;
+import org.quartz.TriggerKey;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,31 +45,41 @@ public class SystemScheduleController {
      */
     @PostMapping("save")
     @Operation(description = "保存定时任务")
-    public void save(@RequestBody @Parameter(description = "定时任务") SystemSchedule systemSchedule) {
+    public void save(@RequestBody @Parameter(description = "定时任务") SystemSchedule systemSchedule) throws ClassNotFoundException {
         Boolean enable = true;
-        String typeValue = "0 0/1 * * * ?";
         String projectId = "100001100001";
-        SystemSchedule schedule = systemScheduleService.getScheduleByResource(projectId, DemoJob.class.getName());
+        Class<?> targetClass = Class.forName(systemSchedule.getJob());
+        SystemSchedule schedule = systemScheduleService.getScheduleByResource(projectId, targetClass.getName());
         Optional<SystemSchedule> optional = Optional.ofNullable(schedule);
         optional.ifPresentOrElse(s -> {
-            s.setValue(typeValue);
+            s.setValue(systemSchedule.getValue());
             systemScheduleService.updateById(s);
             systemScheduleService.addOrUpdateCronJob(s, DemoJob.getJobKey(projectId), DemoJob.getTriggerKey(projectId), DemoJob.class);
         }, () -> {
             SystemSchedule build = SystemSchedule.builder()
-                    .name("demo schedule job")
+                    .name(systemSchedule.getName())
                     .key(IDGenerator.nextStr())
                     .resourceId(projectId)
                     .projectId(projectId)
                     .enable(enable)
                     .type(ScheduleType.CRON.name())
-                    .value(typeValue)
-                    .job(DemoJob.class.getName())
-                    .resourceType(ScheduleResourceType.DEMO.name())
+                    .value(systemSchedule.getValue())
+                    .job(systemSchedule.getJob())
+                    .resourceType(ScheduleResourceType.LUNA.name())
                     .createUser(SessionUtils.getUserName())
                     .build();
             systemScheduleService.addSchedule(build);
-            systemScheduleService.addOrUpdateCronJob(build, DemoJob.getJobKey(projectId), DemoJob.getTriggerKey(projectId), DemoJob.class);
+            try {
+                Method getJobKey = targetClass.getMethod("getJobKey", String.class);
+                Method getTriggerKey = targetClass.getMethod("getTriggerKey", String.class);
+                systemScheduleService.addOrUpdateCronJob(build,
+                        (JobKey) getJobKey.invoke(targetClass.getDeclaredConstructor().newInstance(), build.getKey()),
+                        (TriggerKey) getTriggerKey.invoke(targetClass.getDeclaredConstructor().newInstance(), build.getKey()),
+                        targetClass);
+            } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
@@ -117,13 +133,18 @@ public class SystemScheduleController {
     /**
      * 分页查询定时任务。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
+    @PostMapping("page")
     @Operation(description = "分页查询定时任务")
-    public Page<SystemSchedule> page(@Parameter(description = "分页信息") Page<SystemSchedule> page) {
-        return systemScheduleService.page(page);
+    public Page<SystemSchedule> page(@Validated @RequestBody SchedulePageRequest request) {
+        return systemScheduleService.getSchedulePage(request);
     }
 
+    @GetMapping("/schedule/switch/{id}")
+    @Operation(summary = "后台任务开启关闭")
+    public void enable(@PathVariable String id) {
+        systemScheduleService.enable(id);
+    }
 }

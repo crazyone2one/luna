@@ -9,19 +9,18 @@ import BaseSidebar from '/@/layout/components/BaseSidebar.vue'
     <base-sidebar/>
     <n-layout>
       <base-header/>
-      <n-layout-content content-style="padding: 20px 40px; min-height: 85vh" :native-scrollbar="false">
+      <n-layout-content content-style="padding: 20px 20px; min-height: 85vh" :native-scrollbar="false">
         <router-view/>
       </n-layout-content>
       <n-layout-footer>
         <n-p>
-          <n-a href="https://github.com/crazyone2one/luna">&lt;/&gt;</n-a>
-          with
           <n-text type="error">♥</n-text>
-          by luna. Licensed under the
-          <n-a href="https://github.com/zce/fearless/blob/main/LICENSE">MIT</n-a>
+          <n-a href="https://github.com/crazyone2one/luna">luna</n-a>
+          with
+          <n-a href="https://github.com/crazyone2one/luna/blob/main/LICENSE">MIT</n-a>
           License.
+          &copy; {{ new Date().getFullYear() }} Luna’s. All rights reserved.
         </n-p>
-        <n-p>&copy; {{ new Date().getFullYear() }} Luna’s. All rights reserved.</n-p>
       </n-layout-footer>
     </n-layout>
   </n-layout>

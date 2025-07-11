@@ -34,6 +34,18 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('/@/views/user/UserList.vue'),
                 meta: {title: '用户管理', menuKey: 'user'}
             },
+            {
+                path: '/settings',
+                name: 'setting',
+                children: [
+                    {
+                        path: 'task',
+                        name: 'Task',
+                        component: () => import('/@/views/task/index.vue'),
+                        meta: {title: '任务管理', menuKey: 'task'}
+                    }
+                ]
+            },
         ]
     },
 ]
@@ -44,14 +56,14 @@ const router = createRouter({
 })
 // Authorize (Make sure that is the first hook.)
 router.beforeEach(to => {
-    const { expires = 0 } = storage.get<{ expires: number }>('token') ?? {}
+    const {expires = 0} = storage.get<{ expires: number }>('token') ?? {}
     // already authorized
     if (to.name === 'Login' && expires > Date.now()) {
         return to.query.redirect?.toString() ?? '/'
     }
     // need authorize & token is invalid
     if (to.meta.requiresAuth === true && expires <= Date.now()) {
-        return { name: 'Login', query: { redirect: to.fullPath } }
+        return {name: 'Login', query: {redirect: to.fullPath}}
     }
 })
 

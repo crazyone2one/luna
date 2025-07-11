@@ -25,8 +25,8 @@ const formRef = ref<FormInst | null>(null)
 const {form, loading, send} = useForm((formData) => fetchLogin(formData),
     {
       initialForm: {
-        username: '',
-        password: ''
+        username: 'admin',
+        password: '123456'
       },
       immediate: false
     })

@@ -28,22 +28,47 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('/@/views/home/index.vue'),
                 meta: {title: '首页', menuKey: 'home'}
             },
+
             {
-                path: 'user',
-                name: 'UserList',
-                component: () => import('/@/views/user/UserList.vue'),
-                meta: {title: '用户管理', menuKey: 'user'}
-            },
-            {
-                path: '/settings',
+                path: '/setting',
                 name: 'setting',
                 children: [
                     {
-                        path: 'task',
-                        name: 'Task',
-                        component: () => import('/@/views/task/index.vue'),
-                        meta: {title: '任务管理', menuKey: 'task'}
-                    }
+                        path: 'taskCenter',
+                        name: 'settingOrganizationTaskCenter',
+                        component: () => import('/@/views/setting/organization/task-center/index.vue'),
+                        meta: {title: '任务中心', menuKey: 'settingOrganizationTaskCenter'}
+                    },
+                    {
+                        path: 'taskCenter',
+                        name: 'settingSystemTaskCenter',
+                        component: () => import('/@/views/setting/system/task-center/index.vue'),
+                        meta: {title: '任务中心', menuKey: 'settingSystemTaskCenter'}
+                    },
+                    {
+                        path: 'org-project',
+                        name: 'settingOrganizationProject',
+                        component: () => import('/@/views/setting/organization/project/OrgProject.vue'),
+                        meta: {title: '项目', menuKey: 'settingOrganizationProject'}
+                    },
+                    {
+                        path: 'org-user-group',
+                        name: 'settingOrganizationUserGroup',
+                        component: () => import('/@/views/setting/organization/user-group/OrgUserGroup.vue'),
+                        meta: {title: '用户组', menuKey: 'settingOrganizationUserGroup'}
+                    },
+                    {
+                        path: 'system-user-group',
+                        name: 'settingSystemUserGroup',
+                        component: () => import('/@/views/setting/system/user-group/SystemUserGroup.vue'),
+                        meta: {title: '用户组', menuKey: 'settingSystemUserGroup'}
+                    },
+                    {
+                        path: 'user',
+                        name: 'settingSystemUser',
+                        component: () => import('/@/views/setting/system/user/index.vue'),
+                        meta: {title: '用户', menuKey: 'settingSystemUser'}
+                    },
                 ]
             },
         ]
@@ -63,6 +88,7 @@ router.beforeEach(to => {
     }
     // need authorize & token is invalid
     if (to.meta.requiresAuth === true && expires <= Date.now()) {
+        storage.clearToken();
         return {name: 'Login', query: {redirect: to.fullPath}}
     }
 })

@@ -5,7 +5,7 @@ import type {ITaskCenterTaskItem} from '/@/types/task.ts'
 import {usePagination, useRequest} from 'alova/client'
 import {fetchSchedulePage, fetchScheduleSwitch} from '/@/api/system/task.ts'
 import BaseCard from '/@/components/BaseCard.vue'
-import AddTaskModal from '/@/views/task/components/AddTaskModal.vue'
+import AddTaskModal from '/src/views/setting/components/AddTaskModal.vue'
 
 const addTaskModelRef = useTemplateRef<InstanceType<typeof AddTaskModal>>('addTaskModel')
 const showAddTaskModel = ref(false)

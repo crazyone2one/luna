@@ -5,7 +5,11 @@ import {fetchLogin} from '/@/api/auth'
 import {useForm} from 'alova/client'
 import {storage} from '/@/utils'
 import {useRouter} from 'vue-router'
+import {useAppStore, useUserStore} from '/@/store';
 
+
+const userStore = useUserStore()
+const appStore = useAppStore()
 const title = import.meta.env.VITE_APP_TITLE
 const rules = {
   username: {
@@ -38,13 +42,14 @@ const handleLogin = (e: Event) => {
         const token = {
           access: res.access_token,
           refresh: '',
-          expires: Date.now() + 3600000
+          expires: Date.now() + 28800000
         }
         storage.set('token', token)
+        userStore.setInfo(res.userInfo)
+        appStore.setCurrentOrgId(res.userInfo.lastOrganizationId)
+        appStore.setCurrentProjectId(res.userInfo.lastProjectId)
         const route = router.currentRoute.value
-        console.log(route)
         const redirect = route.query.redirect?.toString()
-        console.log(redirect)
         await router.replace(redirect ?? route.redirectedFrom?.fullPath ?? '/')
       })
     }

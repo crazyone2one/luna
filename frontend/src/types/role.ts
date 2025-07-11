@@ -1,3 +1,5 @@
+import type {IUserState} from '/@/store/module/user/types.ts'
+
 export interface IRole {
     /** 用户id */
     id: string;
@@ -21,5 +23,5 @@ export interface ILoginRespInfo {
     access_token: string;
     /** 刷新token */
     refresh_token?: string;
-    user: IUser;
+    userInfo: IUserState;
 }

@@ -1,7 +1,12 @@
 package cn.master.luna.service;
 
-import com.mybatisflex.core.service.IService;
 import cn.master.luna.entity.SystemProject;
+import cn.master.luna.entity.dto.ProjectDTO;
+import cn.master.luna.entity.request.OrganizationProjectRequest;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.service.IService;
+
+import java.util.List;
 
 /**
  * 项目 服务层。
@@ -11,4 +16,9 @@ import cn.master.luna.entity.SystemProject;
  */
 public interface SystemProjectService extends IService<SystemProject> {
 
+    Page<ProjectDTO> getProjectPage(OrganizationProjectRequest request);
+
+    ProjectDTO add(SystemProject request, String createUser);
+
+    List<SystemProject> getUserProject(String organizationId, String userId);
 }

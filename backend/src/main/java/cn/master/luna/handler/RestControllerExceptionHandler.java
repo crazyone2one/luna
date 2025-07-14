@@ -74,6 +74,7 @@ public class RestControllerExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<ResultHandler> handleException(Exception e) {
+        e.printStackTrace();
         return ResponseEntity.internalServerError()
                 .body(ResultHandler.error(CustomHttpResultCode.FAILED.getCode(),
                         e.getMessage(), getStackTraceAsString(e)));

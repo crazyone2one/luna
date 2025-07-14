@@ -21,8 +21,10 @@ import {
     NMenu,
     NP,
     NResult,
+    NSelect,
     NSpace,
     NSpin,
+    NTag,
     NText,
     NTooltip
 } from 'naive-ui'
@@ -33,7 +35,8 @@ const naive = create({
     components: [
         NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
-        NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin
+        NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin,NSelect,
+        NTag
     ]
 })
 

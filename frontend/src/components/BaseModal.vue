@@ -3,6 +3,9 @@ import {NModal} from 'naive-ui';
 
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false})
 const emit = defineEmits(['cancel', 'submit'])
+defineProps<{
+  isEdit?: boolean;
+}>();
 </script>
 
 <template>
@@ -17,9 +20,12 @@ const emit = defineEmits(['cancel', 'submit'])
     </div>
     <template #action>
       <div class="flex flex-row justify-between">
+        <div class="flex flex-row items-center gap-[4px]">
+          <slot name="actionLeft"></slot>
+        </div>
         <div class="flex flex-row gap-[12px]">
-          <n-button type="tertiary" size="small" @click="emit('cancel')">算了</n-button>
-          <n-button type="primary" size="small" @click="emit('submit')">确认</n-button>
+          <n-button type="tertiary" size="small" @click="emit('cancel')">取消</n-button>
+          <n-button type="primary" size="small" @click="emit('submit')">{{ isEdit ? '确认' : '创建' }}</n-button>
         </div>
       </div>
     </template>

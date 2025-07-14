@@ -1,7 +1,11 @@
 package cn.master.luna.service;
 
-import com.mybatisflex.core.service.IService;
 import cn.master.luna.entity.SystemUser;
+import cn.master.luna.entity.dto.BasePageRequest;
+import cn.master.luna.entity.dto.UserTableResponse;
+import cn.master.luna.entity.request.AddUserRequest;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.service.IService;
 
 /**
  * 用户 服务层。
@@ -11,4 +15,7 @@ import cn.master.luna.entity.SystemUser;
  */
 public interface SystemUserService extends IService<SystemUser> {
 
+    Page<UserTableResponse> getUserPage(BasePageRequest request);
+
+    SystemUser addUser(AddUserRequest request);
 }

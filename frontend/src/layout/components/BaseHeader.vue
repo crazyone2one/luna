@@ -5,7 +5,7 @@ import {computed} from 'vue'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '/@/store'
 import {clearToken} from '/@/utils/storage.ts';
-
+import BaseProjectSelect from '/@/components/BaseProjectSelect.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -44,6 +44,7 @@ const handleOptionsSelect = async (key: string, option: DropdownOption) => {
       <base-icon type="refresh" size="20" :depth="2"/>
     </n-button>
     <n-space :size="20" align="center" style="line-height: 1">
+      <base-project-select/>
       <n-tooltip>
         <template #trigger>
           <n-a href="https://github.com/crazyone2one/luna" target="_blank">

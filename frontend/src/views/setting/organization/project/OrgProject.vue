@@ -1,17 +1,108 @@
 <script setup lang="ts">
 
+import BaseCard from '/@/components/BaseCard.vue'
+import {computed, h, onMounted, ref} from 'vue'
+import {type DataTableColumns, type DataTableRowKey, NButton, NSpace, NSwitch} from 'naive-ui'
+import type {IProjectItem} from '/@/types/project.ts'
+import {usePagination} from 'alova/client'
+import {fetchOrgProjectPage} from '/@/api/system/org-project.ts'
+import {useAppStore} from '/@/store'
+
+const appStore = useAppStore();
+const keyword = ref('');
+const currentOrgId = computed(() => appStore.currentOrgId);
+const checkedRowKeys = ref<DataTableRowKey[]>([])
+const columns = computed<DataTableColumns<IProjectItem>>(() => {
+  return [
+    {
+      type: 'selection',
+    },
+    {
+      title: 'ID',
+      key: 'num',
+      width: 100
+    },
+    {
+      title: '名称',
+      key: 'name',
+    },
+    {
+      title: '成员',
+      key: 'memberCount',
+    },
+    {
+      title: '状态',
+      key: 'enable',
+      render(row) {
+        return h(NSwitch, {size: 'small', value: row.enable,}, {})
+      }
+    },
+    {
+      title: '描述',
+      key: 'description',
+    },
+    {
+      title: '所属组织',
+      key: 'organizationName',
+    },
+    {
+      title: 'Action',
+      key: 'actions',
+      fixed: 'right',
+      width: 250,
+      render(row) {
+        if (row.enable) {
+          return h(NSpace, {}, {
+            default: () => {
+              return [
+                h(NButton, {size: 'tiny', type: 'warning'}, {default: () => '编辑'}),
+                h(NButton, {size: 'tiny', type: 'info',disabled: true}, {default: () => '添加成员'}),
+                h(NButton, {size: 'tiny', type: 'tertiary', disabled: true}, {default: () => '进入项目'}),
+              ]
+            }
+          })
+        } else {
+          return h(NButton, {size: 'tiny', type: 'error'}, {default: () => '删除'})
+        }
+      }
+    }
+  ]
+})
+const handleCheck = (rowKeys: DataTableRowKey[]) => {
+  checkedRowKeys.value = rowKeys
+}
+const {data, send: loadList, loading} = usePagination((page, pageSize) => {
+  const param = {page, pageSize, organizationId: currentOrgId.value, keyword: keyword.value}
+  return fetchOrgProjectPage(param)
+}, {
+  initialData: {
+    total: 0,
+    data: []
+  },
+  immediate: false,
+  data: resp => resp.records,
+  total: resp => resp.totalRow,
+})
+onMounted(() => {
+  loadList()
+})
 </script>
 
 <template>
-  <n-result
-      status="info"
-      title="信息"
-      description="在这个年代，信息就是金钱，金钱就是信息。"
-  >
-    <template #footer>
-      <n-button>org project</n-button>
+  <base-card :show="loading">
+    <template #header>
+      <n-button type="primary"> 创建项目</n-button>
     </template>
-  </n-result>
+    <template #header-extra>
+      <n-input class="w-[240px]" clearable placeholder="通过 ID/名称搜索"/>
+    </template>
+    <n-data-table
+        :columns="columns"
+        :data="data"
+        :row-key="(row: IProjectItem) => row.id"
+        @update:checked-row-keys="handleCheck"
+    />
+  </base-card>
 </template>
 
 <style scoped>

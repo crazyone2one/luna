@@ -5,6 +5,8 @@ import {
     NBadge,
     NButton,
     NCard,
+    NCheckbox,
+    NCheckboxGroup,
     NDataTable,
     NDropdown,
     NForm,
@@ -24,6 +26,7 @@ import {
     NSelect,
     NSpace,
     NSpin,
+    NSwitch,
     NTag,
     NText,
     NTooltip
@@ -35,8 +38,8 @@ const naive = create({
     components: [
         NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
-        NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin,NSelect,
-        NTag
+        NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin, NSelect,
+        NTag, NSwitch, NCheckboxGroup, NCheckbox
     ]
 })
 

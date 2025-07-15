@@ -1,15 +1,17 @@
 import {defineStore} from 'pinia'
 import type {IAppState} from '/@/store/module/app/types.ts'
+import {fetchProjectList} from '/@/api/system/org-project.ts'
 
 const useAppStore = defineStore('app', {
     state: (): IAppState => ({
         currentOrgId: '',
         currentProjectId: '',
+        projectList: []
     }),
     persist: {
         pick: ['currentOrgId', 'currentProjectId']
     },
-    getters:{
+    getters: {
         getCurrentOrgId(state: IAppState): string {
             return state.currentOrgId;
         },
@@ -17,13 +19,20 @@ const useAppStore = defineStore('app', {
             return state.currentProjectId;
         },
     },
-    actions:{
+    actions: {
         setCurrentOrgId(id: string) {
             this.currentOrgId = id;
         },
         setCurrentProjectId(id: string) {
             this.currentProjectId = id;
         },
+        async initProjectList(){
+            if (this.currentOrgId) {
+                this.projectList = await fetchProjectList(this.currentOrgId)
+            } else {
+                this.projectList=[]
+            }
+        }
     }
 })
 export default useAppStore

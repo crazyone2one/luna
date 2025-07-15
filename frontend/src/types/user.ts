@@ -56,3 +56,10 @@ export interface SystemRole {
     selected: boolean; // 是否可选
     closeable: boolean; // 是否可取消
 }
+export interface UserSelectorOption {
+    id: string;
+    name: string;
+    email: string;
+    disabled?: boolean;
+    [key: string]: string | number | boolean | undefined;
+}

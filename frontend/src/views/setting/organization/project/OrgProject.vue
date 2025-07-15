@@ -1,15 +1,19 @@
 <script setup lang="ts">
 
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, h, onMounted, ref} from 'vue'
+import {computed, h, onMounted, ref, useTemplateRef} from 'vue'
 import {type DataTableColumns, type DataTableRowKey, NButton, NSpace, NSwitch} from 'naive-ui'
-import type {IProjectItem} from '/@/types/project.ts'
+import type {CreateOrUpdateSystemProjectParams, IProjectItem} from '/@/types/project.ts'
 import {usePagination} from 'alova/client'
 import {fetchOrgProjectPage} from '/@/api/system/org-project.ts'
 import {useAppStore} from '/@/store'
+import AddProjectModal from '/@/views/setting/organization/project/AddProjectModal.vue'
 
+const addProjectModalRef = useTemplateRef<InstanceType<typeof AddProjectModal>>('addProjectModal')
 const appStore = useAppStore();
 const keyword = ref('');
+const addProjectVisible = ref(false);
+const currentUpdateProject = ref<CreateOrUpdateSystemProjectParams>();
 const currentOrgId = computed(() => appStore.currentOrgId);
 const checkedRowKeys = ref<DataTableRowKey[]>([])
 const columns = computed<DataTableColumns<IProjectItem>>(() => {
@@ -20,7 +24,7 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
     {
       title: 'ID',
       key: 'num',
-      width: 100
+      width: 150
     },
     {
       title: '名称',
@@ -56,7 +60,7 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
             default: () => {
               return [
                 h(NButton, {size: 'tiny', type: 'warning'}, {default: () => '编辑'}),
-                h(NButton, {size: 'tiny', type: 'info',disabled: true}, {default: () => '添加成员'}),
+                h(NButton, {size: 'tiny', type: 'info', disabled: true}, {default: () => '添加成员'}),
                 h(NButton, {size: 'tiny', type: 'tertiary', disabled: true}, {default: () => '进入项目'}),
               ]
             }
@@ -83,6 +87,16 @@ const {data, send: loadList, loading} = usePagination((page, pageSize) => {
   data: resp => resp.records,
   total: resp => resp.totalRow,
 })
+const showAddProject = () => {
+  addProjectVisible.value = true
+  currentUpdateProject.value = undefined
+}
+const handleAddProjectModalCancel = (shouldSearch: boolean) => {
+  currentUpdateProject.value = undefined;
+  if (shouldSearch) {
+    loadList();
+  }
+};
 onMounted(() => {
   loadList()
 })
@@ -91,7 +105,7 @@ onMounted(() => {
 <template>
   <base-card :show="loading">
     <template #header>
-      <n-button type="primary"> 创建项目</n-button>
+      <n-button type="primary" @click="showAddProject"> 创建项目</n-button>
     </template>
     <template #header-extra>
       <n-input class="w-[240px]" clearable placeholder="通过 ID/名称搜索"/>
@@ -103,6 +117,9 @@ onMounted(() => {
         @update:checked-row-keys="handleCheck"
     />
   </base-card>
+  <add-project-modal ref="addProjectModalRef" v-model:show-modal="addProjectVisible"
+                     :current-project="currentUpdateProject"
+                     @cancel="handleAddProjectModalCancel"/>
 </template>
 
 <style scoped>

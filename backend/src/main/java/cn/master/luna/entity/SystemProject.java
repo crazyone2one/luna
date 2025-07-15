@@ -43,7 +43,7 @@ public class SystemProject implements Serializable {
      * 项目编号
      */
     @Schema(description = "项目编号")
-    private Long num;
+    private String num;
 
     /**
      * 组织ID
@@ -120,7 +120,7 @@ public class SystemProject implements Serializable {
     @Column(typeHandler = JacksonTypeHandler.class)
     private List<String> moduleSetting;
 
-    @Column(ignore = true)
+    @Column(ignore = true,typeHandler = JacksonTypeHandler.class)
     private List<String> userIds;
 
 }

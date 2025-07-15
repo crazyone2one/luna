@@ -1,29 +1,39 @@
 <script setup lang="ts">
-import {ref, watch} from 'vue'
-import {useAppStore} from '/@/store'
-import {fetchProjectList} from '/@/api/system/org-project.ts'
-import type {IProjectItem} from '/@/types/project.ts'
+import {watch} from 'vue'
+import {useAppStore, useUserStore} from '/@/store'
+import {useRouter} from 'vue-router'
+import BaseIcon from '/@/components/BaseIcon.vue'
+import {switchProject} from '/@/api/system/org-project.ts'
+import {useRequest} from 'alova/client'
 
 const props = defineProps<{
   class?: string;
   useDefaultArrowIcon?: boolean;
 }>();
-
+const router = useRouter();
 const appStore = useAppStore();
-const options = ref<IProjectItem[]>([])
+const userStore = useUserStore();
+const {send: handleSwitchProject} = useRequest((param) => switchProject(param), {immediate: false})
 const handleUpdateValue = (value: string) => {
-  console.log(value)
-}
-const init = async () => {
-  if (appStore.currentOrgId) {
-    options.value = []
-    options.value = await fetchProjectList(appStore.getCurrentOrgId);
-  } else {
-    options.value = [];
-  }
+  handleSwitchProject({
+    projectId: value,
+    userId: userStore.id || '',
+  }).then(res => {
+    console.log(res)
+    userStore.setInfo(res)
+    appStore.setCurrentOrgId(res.lastOrganizationId)
+    appStore.setCurrentProjectId(res.lastProjectId)
+  });
+  router.replace({
+    name: router.getRoutes()[0].name,
+    query: {
+      orgId: appStore.currentOrgId,
+      pId: value,
+    },
+  })
 }
 watch(() => appStore.currentOrgId, () => {
-  // init()
+  appStore.initProjectList()
 }, {immediate: true})
 
 </script>
@@ -33,13 +43,18 @@ watch(() => appStore.currentOrgId, () => {
       :value="appStore.currentProjectId"
       :class="props.class || 'mr-[8px] w-[200px]'"
       filterable
-      :options="options"
+      :options="appStore.projectList"
       label-field="name"
       value-field="id"
       @update:value="handleUpdateValue"
   >
     <template #action>
-      <n-button class="mb-[4px] h-[28px] w-full justify-start pl-[7px] pr-0" text>新建项目</n-button>
+      <n-button class="mb-[4px] h-[28px] w-full justify-start pl-[7px] pr-0" text disabled>
+        <template #icon>
+          <base-icon type="add"/>
+        </template>
+        新建项目
+      </n-button>
     </template>
   </n-select>
 </template>

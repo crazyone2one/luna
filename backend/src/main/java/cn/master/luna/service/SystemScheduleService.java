@@ -2,6 +2,7 @@ package cn.master.luna.service;
 
 import cn.master.luna.entity.SystemSchedule;
 import cn.master.luna.entity.request.SchedulePageRequest;
+import cn.master.luna.entity.request.ScheduleRequest;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import org.quartz.JobKey;
@@ -25,4 +26,8 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     Page<SystemSchedule> getSchedulePage(SchedulePageRequest request);
 
     void enable(String id);
+
+    void updateCron(ScheduleRequest request, String userName, String path, String module);
+
+    int editSchedule(SystemSchedule schedule);
 }

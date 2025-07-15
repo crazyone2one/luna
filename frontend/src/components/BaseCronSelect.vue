@@ -1,4 +1,7 @@
 <script setup lang="ts">
+withDefaults(defineProps<{ size: 'tiny' | 'small' | 'medium' | 'large' }>(), {
+  size: 'medium'
+})
 const cron = defineModel<string>('modelValue', {
   required: true,
 });
@@ -22,6 +25,7 @@ const emit = defineEmits<{
       tag filterable
       placeholder='可直接输入表达式'
       :options="options"
+      :size="size"
       @update:value="emit('change', $event)"
       :fallback-option="(val:string)=>({label: `${val}`,value: val})"
   />

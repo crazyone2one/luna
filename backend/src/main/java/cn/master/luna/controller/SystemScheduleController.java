@@ -4,7 +4,6 @@ import cn.master.luna.constants.ScheduleResourceType;
 import cn.master.luna.constants.ScheduleType;
 import cn.master.luna.entity.SystemSchedule;
 import cn.master.luna.entity.request.SchedulePageRequest;
-import cn.master.luna.job.DemoJob;
 import cn.master.luna.service.SystemScheduleService;
 import cn.master.luna.util.IDGenerator;
 import cn.master.luna.util.SessionUtils;
@@ -45,23 +44,31 @@ public class SystemScheduleController {
      */
     @PostMapping("save")
     @Operation(description = "保存定时任务")
-    public void save(@RequestBody @Parameter(description = "定时任务") SystemSchedule systemSchedule) throws ClassNotFoundException {
-        Boolean enable = true;
-        String projectId = "100001100001";
+    public void save(@RequestBody @Parameter(description = "定时任务") SystemSchedule systemSchedule) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?> targetClass = Class.forName(systemSchedule.getJob());
-        SystemSchedule schedule = systemScheduleService.getScheduleByResource(projectId, targetClass.getName());
+        Method getJobKey = targetClass.getMethod("getJobKey", String.class);
+        Method getTriggerKey = targetClass.getMethod("getTriggerKey", String.class);
+        Object instance = targetClass.getDeclaredConstructor().newInstance();
+        SystemSchedule schedule = systemScheduleService.getScheduleByResource(systemSchedule.getResourceId(), targetClass.getName());
         Optional<SystemSchedule> optional = Optional.ofNullable(schedule);
         optional.ifPresentOrElse(s -> {
             s.setValue(systemSchedule.getValue());
             systemScheduleService.updateById(s);
-            systemScheduleService.addOrUpdateCronJob(s, DemoJob.getJobKey(projectId), DemoJob.getTriggerKey(projectId), DemoJob.class);
+            try {
+                systemScheduleService.addOrUpdateCronJob(s,
+                        (JobKey) getJobKey.invoke(instance, systemSchedule.getResourceId()),
+                        (TriggerKey) getTriggerKey.invoke(instance, systemSchedule.getResourceId()),
+                        targetClass);
+            } catch (IllegalAccessException | RuntimeException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
         }, () -> {
             SystemSchedule build = SystemSchedule.builder()
                     .name(systemSchedule.getName())
                     .key(IDGenerator.nextStr())
-                    .resourceId(projectId)
-                    .projectId(projectId)
-                    .enable(enable)
+                    .resourceId(systemSchedule.getResourceId())
+                    .projectId(systemSchedule.getResourceId())
+                    .enable(systemSchedule.getEnable())
                     .type(ScheduleType.CRON.name())
                     .value(systemSchedule.getValue())
                     .job(systemSchedule.getJob())
@@ -70,14 +77,11 @@ public class SystemScheduleController {
                     .build();
             systemScheduleService.addSchedule(build);
             try {
-                Method getJobKey = targetClass.getMethod("getJobKey", String.class);
-                Method getTriggerKey = targetClass.getMethod("getTriggerKey", String.class);
                 systemScheduleService.addOrUpdateCronJob(build,
-                        (JobKey) getJobKey.invoke(targetClass.getDeclaredConstructor().newInstance(), build.getKey()),
-                        (TriggerKey) getTriggerKey.invoke(targetClass.getDeclaredConstructor().newInstance(), build.getKey()),
+                        (JobKey) getJobKey.invoke(instance, build.getKey()),
+                        (TriggerKey) getTriggerKey.invoke(instance, build.getKey()),
                         targetClass);
-            } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
-                     NoSuchMethodException e) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -136,7 +140,7 @@ public class SystemScheduleController {
      * @param request 分页对象
      * @return 分页对象
      */
-    @PostMapping("page")
+    @PostMapping("/organization/schedule/page")
     @Operation(description = "分页查询定时任务")
     public Page<SystemSchedule> page(@Validated @RequestBody SchedulePageRequest request) {
         return systemScheduleService.getSchedulePage(request);

@@ -1,6 +1,8 @@
 package cn.master.luna.job;
 
+import cn.master.luna.entity.SystemProject;
 import cn.master.luna.handler.schedule.BaseScheduleJob;
+import com.mybatisflex.core.query.QueryChain;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 
@@ -22,7 +24,10 @@ public class DemoJob extends BaseScheduleJob {
     protected void businessExecute(JobExecutionContext context) {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String resourceId = jobDataMap.getString("resourceId");
+        String projectId = jobDataMap.getString("projectId");
         String userId = jobDataMap.getString("userId");
         log.info("resourceId:{}, userId:{}", resourceId, userId);
+        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SystemProject::getId).eq(projectId).one();
+        log.info("systemProject:{}", systemProject);
     }
 }

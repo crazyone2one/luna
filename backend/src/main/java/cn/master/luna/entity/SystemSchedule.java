@@ -125,4 +125,8 @@ public class SystemSchedule implements Serializable {
     @Column(ignore = true)
     @Schema(description = "下次执行时间")
     private Long nextTime;
+
+    @Column(ignore = true)
+    @Schema(description = "上次执行时间")
+    private Long lastTime;
 }

@@ -4,15 +4,18 @@ import {type FormInst} from 'naive-ui'
 import {ref} from 'vue'
 import {useForm} from 'alova/client'
 import {fetchCreateSchedule} from '/@/api/system/task.ts'
+import {useAppStore} from '/@/store'
+import BaseIcon from '/@/components/BaseIcon.vue'
+import BaseCronSelect from '/@/components/BaseCronSelect.vue'
 
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false})
 const formRef = ref<FormInst | null>(null)
-
+const appStore = useAppStore()
 const rules = {
-  inputValue: {
+  value: {
     required: true,
-    trigger: ['blur', 'input'],
-    message: '请输入 inputValue'
+    trigger: ['input'],
+    message: '请输入 cron表达式'
   },
   name: {
     required: true,
@@ -24,22 +27,25 @@ const rules = {
     trigger: ['blur', 'input'],
     message: '请输入 job'
   },
-  value: {
-    required: true,
-    trigger: ['blur', 'input'],
-    message: '请输入 cron value'
-  },
 }
-
-const {form, reset} = useForm(form => fetchCreateSchedule(form), {
+const handleRunRuleChange = (val:string) => {
+  console.log(val)
+}
+const {form, reset, send} = useForm(form => fetchCreateSchedule(form), {
   immediate: false,
   initialForm: {
     name: '',
     job: '',
     value: '',
+    resourceId: appStore.currentProjectId,
+    enable: true
   }
 })
 const handleSubmit = () => {
+  // send().then(() => {
+  //   window.$message.success('任务添加成功')
+  //   handleCancel()
+  // })
   console.log(form.value)
 }
 const handleCancel = () => {
@@ -65,15 +71,34 @@ const handleCancel = () => {
         size="small"
     >
       <n-form-item label="taskName" path="name">
-        <n-input v-model:value="form.name"/>
+        <n-input v-model:value="form.name" placeholder="录入任务名称"/>
       </n-form-item>
       <n-form-item label="job" path="job">
-        <n-input v-model:value="form.job"/>
+        <n-input v-model:value="form.job" clearable placeholder="录入任务对应的类名"/>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <base-icon type="fallback"/>
+          </template>
+          录入类似cn.master.luna.job.DemoJob
+        </n-tooltip>
       </n-form-item>
-      <n-form-item label="cron" path="cron">
-        <n-input v-model:value="form.value"/>
+      <n-form-item label="cron表达式" path="value">
+        <!--        <n-input v-model:value="form.value" clearable placeholder="录入任务表达式"/>-->
+        <base-cron-select v-model:model-value="form.value"/>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <base-icon type="fallback"/>
+          </template>
+          录入cron表达式
+        </n-tooltip>
       </n-form-item>
     </n-form>
+    <template #actionLeft>
+      <div class="mr-3">
+        <n-switch size="small" v-model:value="form.enable"/>
+        <span>状态</span>
+      </div>
+    </template>
   </base-modal>
 </template>
 

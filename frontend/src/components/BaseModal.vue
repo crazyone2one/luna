@@ -9,7 +9,7 @@ defineProps<{
 </script>
 
 <template>
-  <n-modal v-model:show="showModal" preset="dialog" title="Dialog">
+  <n-modal v-model:show="showModal" preset="dialog" title="Dialog" :mask-closable="false">
     <template #header>
       <div>
         <slot name="header"></slot>

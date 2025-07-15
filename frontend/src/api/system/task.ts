@@ -3,7 +3,7 @@ import type {ICommonPage, ITableQueryParams} from '/@/types/common.ts'
 import type {ITaskCenterTaskItem, ITaskItem} from '/@/types/task.ts'
 
 export const fetchSchedulePage = (data: ITableQueryParams) => {
-    return alovaInstance.Post<ICommonPage<ITaskCenterTaskItem>>('/system-schedule/page', data)
+    return alovaInstance.Post<ICommonPage<ITaskCenterTaskItem>>('/system-schedule/organization/schedule/page', data)
 }
 
 export const fetchScheduleSwitch = (id: string) => {

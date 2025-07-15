@@ -89,17 +89,42 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     public Page<SystemSchedule> getSchedulePage(SchedulePageRequest request) {
         List<OptionDTO> projectList = QueryChain.of(SystemProject.class)
                 .select(SYSTEM_PROJECT.ID, SYSTEM_PROJECT.NAME)
+                .where(SYSTEM_PROJECT.ORGANIZATION_ID.eq(request.getOrgId()))
                 .orderBy(SYSTEM_PROJECT.CREATE_TIME.desc())
                 .listAs(OptionDTO.class);
         List<String> projectIds = projectList.stream().map(OptionDTO::getId).toList();
-        return queryChain()
+        Page<SystemSchedule> page = queryChain()
                 .select(SYSTEM_SCHEDULE.ALL_COLUMNS)
                 .select(" QRTZ_TRIGGERS.NEXT_FIRE_TIME AS next_time")
+                .select(" QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select(SYSTEM_PROJECT.ORGANIZATION_ID)
                 .from(SYSTEM_SCHEDULE).as("task")
                 .leftJoin(SYSTEM_PROJECT).on(SYSTEM_SCHEDULE.PROJECT_ID.eq(SYSTEM_PROJECT.ID))
                 .leftJoin("QRTZ_TRIGGERS").on("task.resource_id = QRTZ_TRIGGERS.TRIGGER_NAME")
+                .where(SYSTEM_SCHEDULE.PROJECT_ID.in(projectIds)
+                        .and(SYSTEM_SCHEDULE.NAME.like(request.getKeyword())
+                                .or(SYSTEM_SCHEDULE.NUM.like(request.getKeyword()))))
                 .page(new Page<>(request.getPage(), request.getPageSize()));
+        processTaskCenterSchedule(page, projectIds);
+        return page;
+    }
+
+    private void processTaskCenterSchedule(Page<SystemSchedule> page, List<String> projectIds) {
+//        List<SystemSchedule> list = page.getRecords();
+//        if (!CollectionUtils.isEmpty(list)) {
+//            if (projectIds.isEmpty()) {
+//                projectIds = list.stream().map(SystemSchedule::getProjectId).toList();
+//            }
+//            List<OptionDTO> orgListByProjectList = QueryChain.of(SystemProject.class)
+//                    .select(SYSTEM_PROJECT.ID, SYSTEM_ORGANIZATION.NAME)
+//                    .from(SYSTEM_PROJECT).innerJoin(SYSTEM_ORGANIZATION).on(SYSTEM_PROJECT.ORGANIZATION_ID.eq(SYSTEM_ORGANIZATION.ID))
+//                    .where(SYSTEM_PROJECT.ID.in(projectIds))
+//                    .listAs(OptionDTO.class);
+//            Map<String, String> orgMap = orgListByProjectList.stream().collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+//            Set<String> userSet = list.stream()
+//                    .flatMap(item -> Stream.of(item.getCreateUser()))
+//                    .collect(Collectors.toSet());
+//        }
     }
 
     @Override

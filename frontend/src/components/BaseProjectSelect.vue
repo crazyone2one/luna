@@ -19,7 +19,6 @@ const handleUpdateValue = (value: string) => {
     projectId: value,
     userId: userStore.id || '',
   }).then(res => {
-    console.log(res)
     userStore.setInfo(res)
     appStore.setCurrentOrgId(res.lastOrganizationId)
     appStore.setCurrentProjectId(res.lastProjectId)

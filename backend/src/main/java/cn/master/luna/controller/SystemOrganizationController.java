@@ -1,13 +1,16 @@
 package cn.master.luna.controller;
 
 import cn.master.luna.entity.SystemOrganization;
+import cn.master.luna.entity.dto.OptionDTO;
 import cn.master.luna.entity.dto.ProjectDTO;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.request.OrganizationProjectRequest;
 import cn.master.luna.service.SystemOrganizationService;
 import cn.master.luna.service.SystemProjectService;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -111,5 +114,18 @@ public class SystemOrganizationController {
     @Operation(description = "分页查询项目")
     public Page<ProjectDTO> page(@Validated @RequestBody OrganizationProjectRequest request) {
         return systemProjectService.getProjectPage(request);
+    }
+
+    @PostMapping("/option/all")
+    @Operation(summary = "系统设置-系统-组织与项目-组织-获取系统所有组织下拉选项")
+    public List<OptionDTO> listAll() {
+        return systemOrganizationService.listAll();
+    }
+
+    @GetMapping("/project/user-admin-list/{organizationId}")
+    @Operation(summary = "系统设置-组织-项目-获取项目管理员下拉选项")
+    public List<UserExtendDTO> getUserAdminList(@PathVariable String organizationId, @Schema(description = "查询关键字，根据邮箱和用户名查询")
+    @RequestParam(value = "keyword", required = false) String keyword) {
+        return systemProjectService.getUserAdminList(organizationId, keyword);
     }
 }

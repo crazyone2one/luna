@@ -1,7 +1,10 @@
 package cn.master.luna.service;
 
-import com.mybatisflex.core.service.IService;
 import cn.master.luna.entity.SystemOrganization;
+import cn.master.luna.entity.dto.OptionDTO;
+import com.mybatisflex.core.service.IService;
+
+import java.util.List;
 
 /**
  * 组织 服务层。
@@ -11,4 +14,5 @@ import cn.master.luna.entity.SystemOrganization;
  */
 public interface SystemOrganizationService extends IService<SystemOrganization> {
 
+    List<OptionDTO> listAll();
 }

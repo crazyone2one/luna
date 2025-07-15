@@ -13,13 +13,14 @@ export interface IProjectItem {
     userIds: string[];
     resourcePoolIds: string[];
     orgAdmins: Record<string, any>;
-    moduleIds: string[];
+    moduleSetting: string[];
     allResourcePool: boolean;
 }
 export interface CreateOrUpdateSystemProjectParams {
     id?: string;
     // 项目名称
     name: string;
+    num: string;
     // 项目描述
     description?: string;
     // 启用或禁用
@@ -27,7 +28,11 @@ export interface CreateOrUpdateSystemProjectParams {
     // 项目成员
     userIds?: string[];
     // 模块配置
-    moduleIds?: string[];
+    moduleSetting?: string[];
     // 所属组织
     organizationId?: string;
+}
+export interface SystemOrgOption {
+    id: string;
+    name: string;
 }

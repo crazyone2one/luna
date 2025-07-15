@@ -2,6 +2,8 @@ package cn.master.luna.controller;
 
 import cn.master.luna.entity.SystemProject;
 import cn.master.luna.entity.dto.ProjectDTO;
+import cn.master.luna.entity.dto.UserDTO;
+import cn.master.luna.entity.request.ProjectSwitchRequest;
 import cn.master.luna.service.SystemProjectService;
 import cn.master.luna.util.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +37,7 @@ public class SystemProjectController {
     @PostMapping("save")
     @Operation(description = "保存项目")
     public ProjectDTO save(@RequestBody @Parameter(description = "项目") SystemProject request) {
-        return systemProjectService.add(request, SessionUtils.getUserName());
+        return systemProjectService.add(request, SessionUtils.getCurrentUserId());
     }
 
     /**
@@ -56,10 +58,10 @@ public class SystemProjectController {
      * @param systemProject 项目
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
-    @PutMapping("update")
+    @PostMapping("/update")
     @Operation(description = "根据主键更新项目")
-    public boolean update(@RequestBody @Parameter(description = "项目主键") SystemProject systemProject) {
-        return systemProjectService.updateById(systemProject);
+    public ProjectDTO update(@RequestBody @Parameter(description = "项目主键") SystemProject systemProject) {
+        return systemProjectService.updateProject(systemProject, SessionUtils.getCurrentUserId());
     }
 
     /**
@@ -85,6 +87,9 @@ public class SystemProjectController {
         return systemProjectService.getById(id);
     }
 
-
-
+    @PostMapping("/switch")
+    @Operation(summary = "切换项目")
+    public UserDTO switchProject(@RequestBody ProjectSwitchRequest request) {
+       return systemProjectService.switchProject(request, SessionUtils.getCurrentUserId());
+    }
 }

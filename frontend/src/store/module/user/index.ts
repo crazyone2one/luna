@@ -42,6 +42,10 @@ const useUserStore = defineStore('user', {
                 orgPermissions: composePermissions(state.userRoleRelations || [], 'ORGANIZATION', appStore.currentOrgId),
                 systemPermissions: composePermissions(state.userRoleRelations || [], 'SYSTEM', 'global'),
             };
+        },
+        isAdmin(state: IUserState):boolean{
+            if (!state.userRolePermissions) return false;
+            return state.userRolePermissions.findIndex((ur) => ur.userRole.id === 'admin') > -1;
         }
     },
     actions:{

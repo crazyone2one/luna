@@ -14,7 +14,7 @@ import java.util.List;
  */
 @Component
 public class NumGenerator {
-    private static final long INIT = 100001L; // 代表从100001开始，各种domain的 num
+    private static final long INIT = 10000L; // 代表从10000开始，各种domain的 num
     private static final long LIMIT = 1;
 
     private static Redisson redisson;

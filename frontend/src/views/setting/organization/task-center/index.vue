@@ -3,15 +3,34 @@ import {type DataTableColumns, type DataTableRowKey, NButton, NSwitch} from 'nai
 import {h, onMounted, ref, useTemplateRef} from 'vue'
 import type {ITaskCenterTaskItem} from '/@/types/task.ts'
 import {usePagination, useRequest} from 'alova/client'
-import {fetchSchedulePage, fetchScheduleSwitch} from '/@/api/system/task.ts'
+import {fetchSchedulePage, fetchScheduleSwitch, organizationEditCron} from '/@/api/system/task.ts'
 import BaseCard from '/@/components/BaseCard.vue'
 import AddTaskModal from '/src/views/setting/organization/task-center/components/AddTaskModal.vue'
 import {useAppStore} from '/@/store'
 import dayjs from 'dayjs'
+import {hasAnyPermission} from '/@/utils/permission.ts'
+import BaseCronSelect from '/@/components/BaseCronSelect.vue'
 
 const addTaskModelRef = useTemplateRef<InstanceType<typeof AddTaskModal>>('addTaskModel')
 const showAddTaskModel = ref(false)
+const type = ref('org')
 const appStore = useAppStore()
+const getCurrentPermission = (action: 'DELETE' | 'EDIT') => {
+  return {
+    system: {
+      DELETE: 'SYSTEM_SCHEDULE_TASK_CENTER:READ+DELETE',
+      EDIT: 'SYSTEM_SCHEDULE_TASK_CENTER:READ+UPDATE',
+    },
+    org: {
+      DELETE: 'ORGANIZATION_SCHEDULE_TASK_CENTER:READ+DELETE',
+      EDIT: 'ORGANIZATION_SCHEDULE_TASK_CENTER:READ+UPDATE',
+    },
+    project: {
+      DELETE: 'PROJECT_SCHEDULE_TASK_CENTER:READ+DELETE',
+      EDIT: 'PROJECT_SCHEDULE_TASK_CENTER:READ+UPDATE',
+    },
+  }[type.value]?.[action];
+}
 const columns: DataTableColumns<ITaskCenterTaskItem> = [
   {
     type: 'selection',
@@ -19,7 +38,7 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
   {
     title: '任务 ID',
     key: 'num',
-    width:100,
+    width: 100,
     render(row) {
       return h(NButton, {text: true, class: 'max-w-full justify-start px-0'}, {default: () => row.num})
     }
@@ -40,15 +59,26 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
   {
     title: '运行规则',
     key: 'value',
-    width: 220,
+    width: 200,
+    render(row) {
+      if (hasAnyPermission([getCurrentPermission('EDIT') as string])) {
+        return h(BaseCronSelect, {
+          modelValue: row.value,
+          size: 'tiny',
+          onChange: (val) => handleRunRuleChange(val, row)
+        }, {})
+      } else {
+        return h('span', null, {default: () => row.value})
+      }
+    }
   },
   {
     title: '上次完成时间',
     key: 'lastTime',
     width: 170,
-    render(item){
-      return h('span',null,{
-        default:()=>item.lastTime ? dayjs(item.lastTime).format('YYYY-MM-DD HH:mm:ss') : '-'
+    render(item) {
+      return h('span', null, {
+        default: () => item.lastTime ? dayjs(item.lastTime).format('YYYY-MM-DD HH:mm:ss') : '-'
       })
     }
   },
@@ -56,9 +86,9 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
     title: '下次执行时间',
     key: 'nextTime',
     width: 170,
-    render(item){
-      return h('span',null,{
-        default:()=>item.nextTime ? dayjs(item.nextTime).format('YYYY-MM-DD HH:mm:ss') : '-'
+    render(item) {
+      return h('span', null, {
+        default: () => item.nextTime ? dayjs(item.nextTime).format('YYYY-MM-DD HH:mm:ss') : '-'
       })
     }
   },
@@ -71,9 +101,9 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
     title: '操作时间',
     key: 'createTime',
     width: 170,
-    render(item){
-      return h('span',null,{
-        default:()=>item.createTime ? dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') : '-'
+    render(item) {
+      return h('span', null, {
+        default: () => item.createTime ? dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') : '-'
       })
     }
   },
@@ -112,6 +142,10 @@ const handleEnableChange = (record: ITaskCenterTaskItem) => {
     loadList()
   })
 }
+const handleRunRuleChange = async (val: string, record: ITaskCenterTaskItem) => {
+  await organizationEditCron(val, record.id);
+  window.$message.success('更新成功')
+}
 const addTask = () => {
   showAddTaskModel.value = true
 }
@@ -135,7 +169,7 @@ onMounted(() => {
         @update:checked-row-keys="handleCheck"
     />
   </base-card>
-  <add-task-modal ref="addTaskModelRef" v-model:show-modal="showAddTaskModel"/>
+  <add-task-modal ref="addTaskModelRef" v-model:show-modal="showAddTaskModel" @refresh="loadList"/>
 </template>
 
 <style scoped>

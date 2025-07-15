@@ -28,9 +28,8 @@ const rules = {
     message: '请输入 job'
   },
 }
-const handleRunRuleChange = (val:string) => {
-  console.log(val)
-}
+const emit = defineEmits<{ (e: 'refresh'): void; }>();
+
 const {form, reset, send} = useForm(form => fetchCreateSchedule(form), {
   immediate: false,
   initialForm: {
@@ -42,11 +41,12 @@ const {form, reset, send} = useForm(form => fetchCreateSchedule(form), {
   }
 })
 const handleSubmit = () => {
-  // send().then(() => {
-  //   window.$message.success('任务添加成功')
-  //   handleCancel()
-  // })
-  console.log(form.value)
+  send().then(() => {
+    window.$message.success('任务添加成功')
+    handleCancel()
+    emit('refresh')
+  })
+  // console.log(form.value)
 }
 const handleCancel = () => {
   showModal.value = false

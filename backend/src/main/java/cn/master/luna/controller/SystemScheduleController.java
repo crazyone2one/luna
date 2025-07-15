@@ -1,9 +1,11 @@
 package cn.master.luna.controller;
 
+import cn.master.luna.constants.OperationLogModule;
 import cn.master.luna.constants.ScheduleResourceType;
 import cn.master.luna.constants.ScheduleType;
 import cn.master.luna.entity.SystemSchedule;
 import cn.master.luna.entity.request.SchedulePageRequest;
+import cn.master.luna.entity.request.ScheduleRequest;
 import cn.master.luna.service.SystemScheduleService;
 import cn.master.luna.util.IDGenerator;
 import cn.master.luna.util.SessionUtils;
@@ -150,5 +152,11 @@ public class SystemScheduleController {
     @Operation(summary = "后台任务开启关闭")
     public void enable(@PathVariable String id) {
         systemScheduleService.enable(id);
+    }
+
+    @PostMapping("/organization/task-center/schedule/update-cron")
+    @Operation(summary = "组织-任务中心-后台任务更新cron表达式")
+    public void updateValue(@Validated @RequestBody ScheduleRequest request) {
+        systemScheduleService.updateCron(request, SessionUtils.getUserName(), "/organization/task-center/schedule/update-cron", OperationLogModule.SETTING_ORGANIZATION_TASK_CENTER);
     }
 }

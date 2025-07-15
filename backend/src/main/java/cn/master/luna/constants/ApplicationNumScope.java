@@ -23,5 +23,7 @@ public enum ApplicationNumScope {
     // Test Case
     CASE_MANAGEMENT,
     REVIEW_CASE_MANAGEMENT,
-    TASK
+    TASK,
+    // 分站
+    NFZDY
 }

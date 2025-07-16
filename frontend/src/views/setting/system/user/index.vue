@@ -83,7 +83,7 @@ const {data, send: loadList, loading} = usePagination((page, pageSize) => {
   data: resp => resp.records,
   total: resp => resp.totalRow,
 })
-const showUserModal = (mode: UserModalMode, record?: UserListItem) => {
+const showUserModal = (_mode: UserModalMode, _record?: UserListItem) => {
   showAddModel.value = true
 }
 onMounted(() => {

@@ -83,14 +83,7 @@ const handleCancel = () => {
         </n-tooltip>
       </n-form-item>
       <n-form-item label="cron表达式" path="value">
-        <!--        <n-input v-model:value="form.value" clearable placeholder="录入任务表达式"/>-->
-        <base-cron-select v-model:model-value="form.value"/>
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <base-icon type="fallback"/>
-          </template>
-          录入cron表达式
-        </n-tooltip>
+        <base-cron-select v-model:model-value="form.value" size="medium"/>
       </n-form-item>
     </n-form>
     <template #actionLeft>

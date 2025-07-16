@@ -7,9 +7,9 @@ import {useForm} from 'alova/client'
 import {fetchCreateUser, getSystemRoles} from '/@/api/system/user.ts'
 import type {SystemRole} from '/@/types/user.ts'
 
-type UserModalMode = 'create' | 'edit';
+// type UserModalMode = 'create' | 'edit';
 const emit = defineEmits(['reload'])
-const userFormMode = ref<UserModalMode>('create');
+// const userFormMode = ref<UserModalMode>('create');
 const title = ref('创建用户')
 const userGroupOptions = ref<SystemRole[]>([]);
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false})

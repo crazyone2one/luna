@@ -112,7 +112,7 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
     key: 'actions',
     fixed: 'right',
     width: 110,
-    render(row) {
+    render() {
       return [
         h(NButton, {type: 'error', size: 'tiny', class: '!mr-[12px]'}, {default: () => '删除'}),
         h(NButton, {type: 'primary', size: 'tiny', class: '!mr-0'}, {default: () => '详情'}),

@@ -34,9 +34,9 @@ mybatis-flex:
       hikari:
         connection-test-query: SELECT 1
     ds2:
-      url: jdbc:mysql://127.0.0.1:3306/tauren
+      url: jdbc:mysql://172.16.2.15:3306/nmfm_mine
       username: root
-      password: Passw0rd
+      password: Zkah@83539595S
 #      type: com.zaxxer.hikari.HikariDataSource
       hikari:
         connection-test-query: SELECT 1

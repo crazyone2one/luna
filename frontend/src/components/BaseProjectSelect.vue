@@ -19,9 +19,9 @@ const handleUpdateValue = (value: string) => {
     projectId: value,
     userId: userStore.id || '',
   }).then(res => {
-    userStore.setInfo(res)
-    appStore.setCurrentOrgId(res.lastOrganizationId)
-    appStore.setCurrentProjectId(res.lastProjectId)
+    userStore.setInfo(res.userInfo)
+    appStore.setCurrentOrgId(res.userInfo.lastOrganizationId)
+    appStore.setCurrentProjectId(res.userInfo.lastProjectId)
   });
   router.replace({
     name: router.getRoutes()[0].name,

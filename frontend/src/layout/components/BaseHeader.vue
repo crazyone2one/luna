@@ -27,7 +27,7 @@ const options = computed(() => {
     }
   ]
 })
-const handleOptionsSelect = async (key: string, option: DropdownOption) => {
+const handleOptionsSelect = async (key: string, _option: DropdownOption) => {
   if ((key) === 'logout') {
     clearToken()
     userStore.resetInfo()

@@ -48,6 +48,7 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html").permitAll()
                 .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/index.html", "/", "/assets/**", "/vite.svg").permitAll()
                 .anyRequest().authenticated()
         );
         http.csrf(AbstractHttpConfigurer::disable);

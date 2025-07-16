@@ -2,8 +2,8 @@ package cn.master.luna.controller;
 
 import cn.master.luna.entity.SystemProject;
 import cn.master.luna.entity.dto.ProjectDTO;
-import cn.master.luna.entity.dto.UserDTO;
 import cn.master.luna.entity.request.ProjectSwitchRequest;
+import cn.master.luna.handler.ResultHandler;
 import cn.master.luna.service.SystemProjectService;
 import cn.master.luna.util.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 项目 控制层。
@@ -89,7 +91,9 @@ public class SystemProjectController {
 
     @PostMapping("/switch")
     @Operation(summary = "切换项目")
-    public UserDTO switchProject(@RequestBody ProjectSwitchRequest request) {
-       return systemProjectService.switchProject(request, SessionUtils.getCurrentUserId());
+    public ResultHandler switchProject(@RequestBody ProjectSwitchRequest request) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("userInfo", systemProjectService.switchProject(request, SessionUtils.getCurrentUserId()));
+        return ResultHandler.success(result);
     }
 }

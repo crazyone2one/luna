@@ -3,6 +3,7 @@ package cn.master.luna.entity;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
+import com.mybatisflex.core.handler.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * 定时任务 实体类。
@@ -112,7 +114,8 @@ public class SystemSchedule implements Serializable {
      * 配置
      */
     @Schema(description = "配置")
-    private String config;
+    @Column(typeHandler = JacksonTypeHandler.class)
+    private Map<String, String> config;
 
     /**
      * 是否删除

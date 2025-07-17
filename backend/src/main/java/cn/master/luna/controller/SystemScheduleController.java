@@ -4,6 +4,7 @@ import cn.master.luna.constants.OperationLogModule;
 import cn.master.luna.constants.ScheduleResourceType;
 import cn.master.luna.constants.ScheduleType;
 import cn.master.luna.entity.SystemSchedule;
+import cn.master.luna.entity.request.RunScheduleRequest;
 import cn.master.luna.entity.request.SchedulePageRequest;
 import cn.master.luna.entity.request.ScheduleRequest;
 import cn.master.luna.service.SystemScheduleService;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.validation.annotation.Validated;
@@ -74,7 +76,7 @@ public class SystemScheduleController {
                     .type(ScheduleType.CRON.name())
                     .value(systemSchedule.getValue())
                     .job(systemSchedule.getJob())
-                    .resourceType(ScheduleResourceType.LUNA.name())
+                    .resourceType(StringUtils.isBlank(systemSchedule.getResourceType()) ? ScheduleResourceType.LUNA.name() : systemSchedule.getResourceType())
                     .createUser(SessionUtils.getUserName())
                     .build();
             systemScheduleService.addSchedule(build);
@@ -158,5 +160,11 @@ public class SystemScheduleController {
     @Operation(summary = "组织-任务中心-后台任务更新cron表达式")
     public void updateValue(@Validated @RequestBody ScheduleRequest request) {
         systemScheduleService.updateCron(request, SessionUtils.getUserName(), "/organization/task-center/schedule/update-cron", OperationLogModule.SETTING_ORGANIZATION_TASK_CENTER);
+    }
+
+    @PostMapping("/organization/task-center/schedule/run")
+    @Operation(summary = "组织-任务中心-后台任务更新cron表达式")
+    public void runScheduleTask(@Validated @RequestBody RunScheduleRequest request) {
+        systemScheduleService.runScheduleTask(request, SessionUtils.getUserName(), "/organization/task-center/schedule/run/", OperationLogModule.SETTING_ORGANIZATION_TASK_CENTER);
     }
 }

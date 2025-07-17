@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -13,11 +14,16 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author Created by 11's papa on 2025/7/2
  */
 public class JacksonUtils {
+    private JacksonUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
     private static final ObjectMapper objectMapper = JsonMapper.builder()
             .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
             .build();
@@ -42,6 +48,7 @@ public class JacksonUtils {
         objectMapper.registerModule(new JavaTimeModule());
 
     }
+
     public static String toJSONString(Object value) {
         try {
             return objectMapper.writeValueAsString(value);
@@ -49,11 +56,19 @@ public class JacksonUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static byte[] toJSONBytes(Object value) {
         try {
             return objectMapper.writeValueAsBytes(value);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> T toJSONObject(Object json, TypeReference<T> typeReference) {
+        if (Objects.isNull(json)) {
+            return null;
+        }
+        return objectMapper.convertValue(json, typeReference);
     }
 }

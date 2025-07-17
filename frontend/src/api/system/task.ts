@@ -20,3 +20,10 @@ export const fetchScheduleSwitch = (id: string) => {
 export const fetchCreateSchedule = (data: ITaskItem) => {
     return alovaInstance.Post(`/system-schedule/save`, data)
 }
+/**
+ * 执行一次任务
+ * @param data
+ */
+export const fetchRunSchedule = (data: { scheduleId: string, sensorType: string }) => {
+    return alovaInstance.Post(`/system-schedule/organization/task-center/schedule/run`, data)
+}

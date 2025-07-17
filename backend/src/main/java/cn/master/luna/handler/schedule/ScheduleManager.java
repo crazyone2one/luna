@@ -74,6 +74,7 @@ public class ScheduleManager {
             throw new CustomException(e);
         }
     }
+
     public void pauseJob(JobKey jobKey) {
         try {
             log.info("pauseJob: {},{}", jobKey.getName(), jobKey.getGroup());
@@ -85,9 +86,10 @@ public class ScheduleManager {
         }
     }
 
-    public static void startJobs(Scheduler schedule) {
+    public void startJobs(JobKey jobKey) {
         try {
-            schedule.start();
+            log.info("startJob: {},{}", jobKey.getName(), jobKey.getGroup());
+            scheduler.triggerJob(jobKey);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new CustomException(e);

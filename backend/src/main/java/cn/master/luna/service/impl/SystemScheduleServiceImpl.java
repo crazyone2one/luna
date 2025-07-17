@@ -9,6 +9,7 @@ import cn.master.luna.entity.dto.LogDTO;
 import cn.master.luna.entity.dto.LogDTOBuilder;
 import cn.master.luna.entity.dto.OptionDTO;
 import cn.master.luna.entity.dto.ProjectDTO;
+import cn.master.luna.entity.request.RunScheduleRequest;
 import cn.master.luna.entity.request.SchedulePageRequest;
 import cn.master.luna.entity.request.ScheduleRequest;
 import cn.master.luna.exception.CustomException;
@@ -29,6 +30,7 @@ import org.quartz.TriggerKey;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -215,6 +217,25 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     @Override
     public int editSchedule(SystemSchedule schedule) {
         return mapper.update(schedule);
+    }
+
+    @Override
+    public void runScheduleTask(RunScheduleRequest request, String userName, String path, String module) {
+        SystemSchedule schedule = checkScheduleExit(request.getScheduleId());
+        removeJob(schedule.getKey(), schedule.getJob());
+        Map<String,String> object = new HashMap<>();
+        object.put("sensorType", request.getSensorType());
+        schedule.setConfig(object);
+        JobKey jobKey = new JobKey(schedule.getKey(), schedule.getJob());
+        TriggerKey triggerKey = new TriggerKey(schedule.getKey(), schedule.getJob());
+        try {
+            Class<?> targetClass = Class.forName(schedule.getJob());
+            addOrUpdateCronJob(schedule, jobKey, triggerKey, targetClass);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        scheduleManager.startJobs(jobKey);
+        saveLog(List.of(schedule), userName, path, HttpMethodConstants.GET.name(), module, OperationLogType.EXECUTE.name());
     }
 
     private void removeJob(String key, String job) {

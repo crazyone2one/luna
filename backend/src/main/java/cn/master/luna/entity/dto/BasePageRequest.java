@@ -4,11 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author Created by 11's papa on 2025/7/9
  */
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class BasePageRequest extends BaseCondition {
     @Min(value = 1, message = "当前页码必须大于0")
     @Schema(description =  "当前页码")

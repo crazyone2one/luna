@@ -5,14 +5,18 @@ import type {ITaskCenterTaskItem} from '/@/types/task.ts'
 import {usePagination, useRequest} from 'alova/client'
 import {fetchSchedulePage, fetchScheduleSwitch, organizationEditCron} from '/@/api/system/task.ts'
 import BaseCard from '/@/components/BaseCard.vue'
-import AddTaskModal from '/src/views/setting/organization/task-center/components/AddTaskModal.vue'
+import AddTaskModal from '/@/views/setting/organization/task-center/components/AddTaskModal.vue'
+import RunOnceModal from '/@/views/setting/organization/task-center/components/RunOnceModal.vue'
 import {useAppStore} from '/@/store'
 import dayjs from 'dayjs'
 import {hasAnyPermission} from '/@/utils/permission.ts'
 import BaseCronSelect from '/@/components/BaseCronSelect.vue'
 
 const addTaskModelRef = useTemplateRef<InstanceType<typeof AddTaskModal>>('addTaskModel')
+const runOnceModalRef = useTemplateRef<InstanceType<typeof RunOnceModal>>('runOnceModal')
 const showAddTaskModel = ref(false)
+const showRunTaskModel = ref(false)
+const currentTask = ref<ITaskCenterTaskItem>({} as ITaskCenterTaskItem)
 const type = ref('org')
 const appStore = useAppStore()
 const getCurrentPermission = (action: 'DELETE' | 'EDIT') => {
@@ -95,7 +99,7 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
   {
     title: '操作人',
     key: 'createUser',
-    width: 150,
+    width: 100,
   },
   {
     title: '操作时间',
@@ -111,12 +115,29 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
     title: 'Action',
     key: 'actions',
     fixed: 'right',
-    width: 110,
-    render() {
-      return [
-        h(NButton, {type: 'error', size: 'tiny', class: '!mr-[12px]'}, {default: () => '删除'}),
-        h(NButton, {type: 'primary', size: 'tiny', class: '!mr-0'}, {default: () => '详情'}),
+    width: 150,
+    render(row) {
+      let actions = [
+        h(NButton, {type: 'primary', size: 'tiny', class: '!mr-[2px]'}, {default: () => '详情'}),
+
       ]
+      if (getCurrentPermission('DELETE')) {
+        actions.unshift(h(NButton, {
+              type: 'error', size: 'tiny', class: '!mr-[2px]',
+              onClick: () => deleteTask(row)
+            },
+            {default: () => '删除'}),)
+      }
+      if (row.job === 'cn.master.luna.job.SensorBasicInfo') {
+        actions.push(h(NButton, {
+              type: 'info', size: 'tiny', class: '!mr-0',
+              onClick: () => {
+                handleRunTask(row)
+              }
+            },
+            {default: () => '执行一次'}))
+      }
+      return actions
     }
   }
 ]
@@ -149,6 +170,18 @@ const handleRunRuleChange = async (val: string, record: ITaskCenterTaskItem) => 
 const addTask = () => {
   showAddTaskModel.value = true
 }
+const deleteTask = (record: ITaskCenterTaskItem) => {
+  window.$dialog.error({
+    content: '删除后，定时任务停止，请谨慎操作！' + record.num,
+    positiveText: '确认删除',
+    negativeText: '取消',
+    maskClosable: false
+  })
+}
+const handleRunTask = (record: ITaskCenterTaskItem) => {
+  showRunTaskModel.value = true
+  currentTask.value = record
+}
 onMounted(() => {
   loadList()
 })
@@ -170,6 +203,7 @@ onMounted(() => {
     />
   </base-card>
   <add-task-modal ref="addTaskModelRef" v-model:show-modal="showAddTaskModel" @refresh="loadList"/>
+  <run-once-modal ref="runOnceModalRef" v-model:show-modal="showRunTaskModel" v-model:current-task="currentTask"/>
 </template>
 
 <style scoped>

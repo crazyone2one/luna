@@ -8,6 +8,7 @@ import {
     NCheckbox,
     NCheckboxGroup,
     NDataTable,
+    NDivider,
     NDropdown,
     NForm,
     NFormItem,
@@ -22,10 +23,15 @@ import {
     NLayoutSider,
     NMenu,
     NP,
+    NPopover,
+    NRadio,
+    NRadioButton,
+    NRadioGroup,
     NResult,
     NSelect,
     NSpace,
     NSpin,
+    NSplit,
     NSwitch,
     NTag,
     NText,
@@ -39,7 +45,7 @@ const naive = create({
         NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
         NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin, NSelect,
-        NTag, NSwitch, NCheckboxGroup, NCheckbox
+        NTag, NSwitch, NCheckboxGroup, NCheckbox, NSplit, NRadioGroup, NRadio, NRadioButton, NPopover, NDivider
     ]
 })
 

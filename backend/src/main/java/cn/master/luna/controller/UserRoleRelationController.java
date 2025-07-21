@@ -1,21 +1,19 @@
 package cn.master.luna.controller;
 
-import com.mybatisflex.core.paginate.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import cn.master.luna.constants.Created;
 import cn.master.luna.entity.UserRoleRelation;
+import cn.master.luna.entity.dto.UserRoleRelationUserDTO;
+import cn.master.luna.entity.request.GlobalUserRoleRelationQueryRequest;
+import cn.master.luna.entity.request.GlobalUserRoleRelationUpdateRequest;
 import cn.master.luna.service.UserRoleRelationService;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import cn.master.luna.util.SessionUtils;
+import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户组关系 控制层。
@@ -25,11 +23,11 @@ import java.util.List;
  */
 @RestController
 @Tag(name = "用户组关系接口")
-@RequestMapping("/userRoleRelation")
+@RequiredArgsConstructor
+@RequestMapping("/user/role/relation")
 public class UserRoleRelationController {
 
-    @Autowired
-    private UserRoleRelationService userRoleRelationService;
+    private final UserRoleRelationService userRoleRelationService;
 
     /**
      * 添加用户组关系。
@@ -49,10 +47,17 @@ public class UserRoleRelationController {
      * @param id 主键
      * @return {@code true} 删除成功，{@code false} 删除失败
      */
-    @DeleteMapping("remove/{id}")
-    @Operation(description="根据主键用户组关系")
-    public boolean remove(@PathVariable @Parameter(description="用户组关系主键") String id) {
-        return userRoleRelationService.removeById(id);
+    @GetMapping("/global/delete/{id}")
+    @Operation(description="系统设置-系统-用户组-用户关联关系-删除全局用户组和用户的关联关系")
+    public void remove(@PathVariable @Parameter(description="用户组关系主键") String id) {
+        userRoleRelationService.delete(id);
+    }
+
+    @PostMapping("/global/add")
+    @Operation(description = "系统设置-系统-用户组-用户关联关系-创建全局用户组和用户的关联关系")
+    public void add(@Validated({Created.class}) @RequestBody GlobalUserRoleRelationUpdateRequest request) {
+        request.setCreateUser(SessionUtils.getUserName());
+        userRoleRelationService.add(request);
     }
 
     /**
@@ -72,10 +77,10 @@ public class UserRoleRelationController {
      *
      * @return 所有数据
      */
-    @GetMapping("list")
-    @Operation(description="查询所有用户组关系")
-    public List<UserRoleRelation> list() {
-        return userRoleRelationService.list();
+    @PostMapping("/global/list")
+    @Operation(description="系统设置-系统-用户组-用户关联关系-获取全局用户组对应的用户列表")
+    public Page<UserRoleRelationUserDTO> list(@Validated @RequestBody GlobalUserRoleRelationQueryRequest request) {
+        return userRoleRelationService.listUser(request);
     }
 
     /**

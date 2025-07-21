@@ -9,6 +9,9 @@ export default defineConfig({
             exclude: ['node_modules', 'dist'],
         },
     },
+    shortcuts: {
+        'one-line-text': 'overflow-hidden overflow-ellipsis whitespace-nowrap;'
+    },
     presets: [
         presetWind3,
         presetIcons({
@@ -17,7 +20,7 @@ export default defineConfig({
             warn: true,
             collections: {
                 local: FileSystemIconLoader('src/assets/svg-icons',
-                        svg => svg.replace(/^<svg /, '<svg fill="currentColor" '))
+                    svg => svg.replace(/^<svg /, '<svg fill="currentColor" '))
             },
         }),
 

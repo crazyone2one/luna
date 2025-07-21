@@ -1,7 +1,10 @@
 package cn.master.luna.service;
 
-import com.mybatisflex.core.service.IService;
 import cn.master.luna.entity.UserRolePermission;
+import cn.master.luna.entity.request.PermissionSettingUpdateRequest;
+import com.mybatisflex.core.service.IService;
+
+import java.util.Set;
 
 /**
  * 用户组权限 服务层。
@@ -11,4 +14,7 @@ import cn.master.luna.entity.UserRolePermission;
  */
 public interface UserRolePermissionService extends IService<UserRolePermission> {
 
+    Set<String> getPermissionIdSetByRoleId(String id);
+
+    void updatePermissionSetting(PermissionSettingUpdateRequest request);
 }

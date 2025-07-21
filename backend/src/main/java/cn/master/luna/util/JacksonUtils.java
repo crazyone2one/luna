@@ -10,10 +10,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -70,5 +72,14 @@ public class JacksonUtils {
             return null;
         }
         return objectMapper.convertValue(json, typeReference);
+    }
+
+    public static <T> List<T> parseArray(String content, Class<T> valueType) {
+        CollectionType javaType = typeFactory.constructCollectionType(List.class, valueType);
+        try {
+            return objectMapper.readValue(content, javaType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -4,9 +4,12 @@ import {
   AddOutline as add,
   AlertCircleOutline as fallback,
   BuildOutline as tools,
+  CaretDown,
+  CaretUp,
   ChatbubbleEllipsesOutline as comments,
   ColorPaletteOutline as themes,
   CreateOutline as posts,
+  EllipsisHorizontal as more,
   FlaskOutline as flask,
   HardwareChipOutline as plugins,
   HelpCircleOutline as help,
@@ -38,7 +41,7 @@ const icons = {
   help,
   notifications,
   github,
-  fallback
+  fallback, CaretUp, CaretDown, more
 }
 
 type IconTypes = keyof typeof icons

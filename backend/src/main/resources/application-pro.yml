@@ -1,12 +1,11 @@
+server:
+  port: 8086
 spring:
-  # i18n
-  messages:
-    basename: i18n/commons,i18n/api,i18n/bug,i18n/case,i18n/plan,i18n/project,i18n/system,i18n/dashboard
-    default-locale: zh_CN
   data:
     redis:
-      host: localhost
+      host: 172.16.2.15
       database: 3
+      password: 3eCrAw8Ba6Tg
   quartz:
     job-store-type: jdbc
     jdbc:
@@ -31,9 +30,9 @@ mybatis-flex:
     logic-delete-column: deleted
   datasource:
     ds1:
-      url: jdbc:mysql://localhost:3306/luna
+      url: jdbc:mysql://172.16.2.15:3306/luna
       username: root
-      password: Passw0rd
+      password: Zkah@83539595S
 #      type: com.zaxxer.hikari.HikariDataSource
       hikari:
         connection-test-query: SELECT 1
@@ -46,15 +45,15 @@ mybatis-flex:
         connection-test-query: SELECT 1
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
   swagger-ui:
-    enabled: true
+    enabled: false
 logging:
   level:
-    web: debug # Web 模块日志级别
-    org.springframework.web: DEBUG  # Spring Web 框架日志
-    org.springframework.boot.web.servlet: DEBUG  # Servlet 容器日志
-    org.springframework.security: DEBUG
+    web: INFO # Web 模块日志级别
+    org.springframework.web: INFO  # Spring Web 框架日志
+    org.springframework.boot.web.servlet: INFO  # Servlet 容器日志
+    org.springframework.security: INFO
 jwt:
   expiration: 28800000
 #  refreshExpirationMs: 86400000

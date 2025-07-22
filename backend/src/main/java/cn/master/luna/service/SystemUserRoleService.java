@@ -3,6 +3,7 @@ package cn.master.luna.service;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.dto.PermissionDefinitionItem;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.dto.UserSelectOption;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberEditRequest;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberRequest;
@@ -42,4 +43,6 @@ public interface SystemUserRoleService extends IService<SystemUserRole> {
     List<SystemUserRole> getGlobalList();
 
     List<SystemUserRole> getOrgList(String organizationId);
+
+    List<UserExtendDTO> getMember(String organizationId, String roleId, String keyword);
 }

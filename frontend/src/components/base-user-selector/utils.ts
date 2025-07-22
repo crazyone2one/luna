@@ -1,5 +1,4 @@
-import {getAdminByProjectByOrg} from '/@/api/system/org-project.ts'
-import {getOrgUserGroupOption} from '/@/api/system/usergroup.ts'
+import {getSystemUserGroupOption} from '/@/api/system/usergroup.ts'
 
 export const UserRequestTypeEnum = {
     SYSTEM_USER_GROUP: 'SYSTEM_USER_GROUP',
@@ -19,14 +18,9 @@ export const UserRequestTypeEnum = {
     SYSTEM_PROJECT_LIST: 'SYSTEM_PROJECT_LIST',
     EXECUTE_USER: 'EXECUTE_USER',
 }
-
 export const initOptionsFunc = (type: string, params: Record<string, any>) => {
-    if (type === UserRequestTypeEnum.ORGANIZATION_PROJECT_ADMIN) {
-        // 组织 - 项目-添加管理员-下拉选项
-        return getAdminByProjectByOrg(params.organizationId, params.keyword);
-    }
-    if (type === UserRequestTypeEnum.ORGANIZATION_USER_GROUP) {
-        // 组织 - 用户组-添加成员-下拉选项
-        return getOrgUserGroupOption(params.organizationId, params.roleId, params.keyword);
+    if (type === UserRequestTypeEnum.SYSTEM_USER_GROUP) {
+        // 系统 - 用户组-添加成员-下拉选项
+        return getSystemUserGroupOption(params.roleId, params.keyword);
     }
 }

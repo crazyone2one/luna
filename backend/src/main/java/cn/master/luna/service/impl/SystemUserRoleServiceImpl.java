@@ -9,6 +9,7 @@ import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.UserRoleRelation;
 import cn.master.luna.entity.dto.Permission;
 import cn.master.luna.entity.dto.PermissionDefinitionItem;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.dto.UserSelectOption;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberEditRequest;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberRequest;
@@ -30,10 +31,12 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static cn.master.luna.constants.InternalUserRole.MEMBER;
 import static cn.master.luna.entity.table.SystemUserRoleTableDef.SYSTEM_USER_ROLE;
@@ -200,6 +203,45 @@ public class SystemUserRoleServiceImpl extends ServiceImpl<SystemUserRoleMapper,
                 .thenComparing(Comparator.comparing(SystemUserRole::getCreateTime).thenComparing(SystemUserRole::getId).reversed())
                 .reversed());
         return userRoles;
+    }
+
+    @Override
+    public List<UserExtendDTO> getMember(String organizationId, String roleId, String keyword) {
+        List<UserExtendDTO> userExtendDTOS = new ArrayList<>();
+        List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)).list();
+        if (!userRoleRelations.isEmpty()) {
+            Map<String, List<String>> userRoleMap = userRoleRelations.stream().collect(Collectors.groupingBy(UserRoleRelation::getUserId,
+                    Collectors.mapping(UserRoleRelation::getRoleId, Collectors.toList())));
+            userRoleMap.forEach((k, v) -> {
+                UserExtendDTO userExtendDTO = new UserExtendDTO();
+                userExtendDTO.setId(k);
+                v.forEach(roleItem -> {
+                    if (Strings.CS.equals(roleItem, roleId)) {
+                        // 该用户已存在用户组关系, 设置为选中状态
+                        userExtendDTO.setCheckRoleFlag(true);
+                    }
+                });
+                userExtendDTOS.add(userExtendDTO);
+            });
+            // 设置用户信息, 用户不存在或者已删除, 则不展示
+            List<String> userIds = userExtendDTOS.stream().map(UserExtendDTO::getId).toList();
+            List<SystemUser> users = QueryChain.of(SystemUser.class).where(SYSTEM_USER.ID.in(userIds)
+                    .and(SYSTEM_USER.NAME.like(keyword).or(SYSTEM_USER.EMAIL.like(keyword)))).list();
+            if (!users.isEmpty()) {
+                Map<String, SystemUser> userMap = users.stream().collect(Collectors.toMap(SystemUser::getId, user -> user));
+                userExtendDTOS.removeIf(userExtend -> {
+                    if (userMap.containsKey(userExtend.getId())) {
+                        BeanUtils.copyProperties(userMap.get(userExtend.getId()), userExtend);
+                        return false;
+                    }
+                    return true;
+                });
+            } else {
+                userExtendDTOS.clear();
+            }
+        }
+        userExtendDTOS.sort(Comparator.comparing(UserExtendDTO::getName));
+        return userExtendDTOS;
     }
 
     private int getInternal(Boolean internal) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, h, inject, ref, watchEffect} from 'vue'
+import {computed, h, inject, ref, type VNode, watchEffect} from 'vue'
 import type {AuthTableItem, CurrentUserGroupItem, UserGroupAuthSetting} from '/@/types/user-group.ts'
 import {type DataTableColumns, NButton, NCheckbox, NCheckboxGroup} from 'naive-ui'
 import {AuthScopeEnum} from '/@/enums/common.ts'
@@ -84,7 +84,7 @@ const columns = computed<DataTableColumns<AuthTableItem>>(() => {
                 onUpdateValue: (v, e) => handleUpdateValue(v, rowIndex, row, e)
               }, {
                 default: () => {
-                  const res = []
+                  const res: VNode[] = []
                   row.permissions?.forEach(item => {
                     res.push(
                         h(NCheckbox, {value: item.id, label: item.name}, {})
@@ -109,9 +109,9 @@ const handleUpdateValue = (_value: (string | number)[], rowIndex: number,
                            record: AuthTableItem,
                            e: {
                              actionType: 'check' | 'uncheck';
-                             value: string;
+                             value: string | number;
                            }) => {
-  setAutoRead(record, e.value);
+  setAutoRead(record, e.value as string);
   if (!tableData.value) return;
   const tmpArr = tableData.value;
   const length = tmpArr[rowIndex].permissions?.length || 0;

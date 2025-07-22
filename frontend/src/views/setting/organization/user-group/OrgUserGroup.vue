@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, nextTick, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
+import {computed, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
 import {AuthScopeEnum} from '/@/enums/common.ts'
 import type {CurrentUserGroupItem} from '/@/types/user-group.ts'
 import UserTable from '/@/components/user-group-comp/UserTable.vue'
@@ -25,15 +25,15 @@ const userGroupLeftRef = useTemplateRef<InstanceType<typeof UserGroupLeft>>('use
 const couldShowUser = computed(() => currentUserGroupItem.value.type === AuthScopeEnum.ORGANIZATION);
 const couldShowAuth = computed(() => currentUserGroupItem.value.id !== 'admin');
 const currentKeyword = ref('');
-const tableSearch = () => {
-  if (currentTable.value === 'user' && userTableRef.value) {
-    userTableRef.value.fetchData();
-  } else if (!userTableRef.value) {
-    nextTick(() => {
-      userTableRef.value?.fetchData();
-    });
-  }
-}
+// const tableSearch = () => {
+//   if (currentTable.value === 'user' && userTableRef.value) {
+//     userTableRef.value.fetchData();
+//   } else if (!userTableRef.value) {
+//     nextTick(() => {
+//       userTableRef.value?.fetchData();
+//     });
+//   }
+// }
 const handleSelect = (item: CurrentUserGroupItem) => {
   currentUserGroupItem.value = item;
 };

@@ -29,8 +29,8 @@ const formRef = ref<FormInst | null>(null)
 const {form, loading, send} = useForm((formData) => fetchLogin(formData),
     {
       initialForm: {
-        username: 'admin',
-        password: '123456'
+        username: '',
+        password: ''
       },
       immediate: false
     })
@@ -67,7 +67,7 @@ const disabled = computed<boolean>(() => form.value.username === '' || form.valu
         <n-input v-model:value="form.username" placeholder="请输入用户名"/>
       </n-form-item>
       <n-form-item path="password">
-        <n-input v-model:value="form.password" placeholder="请输入密码"/>
+        <n-input v-model:value="form.password" type="password" placeholder="请输入密码"/>
       </n-form-item>
     </n-form>
     <n-button type="primary" size="large" block :disabled="disabled" :loading="loading" @click="handleLogin">登录

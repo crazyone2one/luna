@@ -6,8 +6,7 @@ import {ContentTypeEnum} from '/@/enums/httpEnum.ts'
 import {storage} from '/@/utils'
 
 export const alovaInstance = createAlova({
-    // baseURL: `${window.location.origin}/${import.meta.env.VITE_API_BASE_URL}`,
-    baseURL: import.meta.env.VITE_APP_BASE_API,
+    baseURL: `${window.location.origin}/${import.meta.env.VITE_API_BASE_URL}`,
     statesHook: VueHook,
     requestAdapter: adapterFetch(),
     timeout: 300 * 1000,

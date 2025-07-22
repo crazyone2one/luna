@@ -1,20 +1,17 @@
-import {defineConfig, loadEnv} from 'vite'
+import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import UnoCSS from 'unocss/vite'
 // https://vite.dev/config/
-export default defineConfig(({mode}) => {
-    const env = loadEnv(mode, process.cwd(), '');
+export default defineConfig(() => {
     return {
-        mode: 'development',
         plugins: [vue(), UnoCSS()],
         server: {
             proxy: {
-                [env.VITE_APP_BASE_API]: {
-                    target: env.VITE_DEV_DOMAIN,
+                '/front': {
+                    target: 'http://127.0.0.1:8080/',
                     changeOrigin: true,
-                    rewrite: (path: string) =>
-                        path.replace(new RegExp('^' + env.VITE_APP_BASE_API), ''),
+                    rewrite: (path: string) => path.replace(new RegExp('^/front'), ''),
                 },
             }
         },

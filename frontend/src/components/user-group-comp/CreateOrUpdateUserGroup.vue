@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {inject, reactive, ref, watchEffect} from 'vue'
+import {reactive, ref, watchEffect} from 'vue'
 import type {UserGroupItem} from '/@/types/user-group.ts'
 
-const systemType = inject<String>('systemType');
+// const systemType = inject<String>('systemType');
 const props = defineProps<{
   id?: string;
   list: UserGroupItem[];

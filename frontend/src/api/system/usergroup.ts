@@ -70,5 +70,30 @@ export const getSystemUserGroupOption = (id: string, keyword: string) => {
  * @param keyword
  */
 export const getOrgUserGroupOption = (organizationId: string, roleId: string, keyword: string) => {
-    return alovaInstance.Get<IUserSelectorOption[]>(`/user/role/organization/get-member/option/${organizationId}/${roleId}`, {params: {keyword}})
+    return alovaInstance.Get<IUserSelectorOption[]>(`/user/role/organization/get-member/option/${organizationId}/${roleId}`,
+        {params: {keyword}, cacheFor: 600})
+}
+/**
+ * 系统-添加用户到用户组
+ * @param data
+ */
+export const addUserToUserGroup = (data: { roleId: string; userIds: string[] }) => {
+    return alovaInstance.Post<string>(`/user/role/relation/global/add`, data)
+}
+export const addOrgUserToUserGroup = (data: { userRoleId: string; userIds: string[]; organizationId: string }) => {
+    return alovaInstance.Post<string>(`/user/role/organization/add-member`, data)
+}
+/**
+ * 系统-删除用户组对应的用户
+ * @param id
+ */
+export const deleteUserFromUserGroup = (id: string) => {
+    return alovaInstance.Get<string>(`/user/role/relation/global/delete/${id}`)
+}
+/**
+ * 组织-删除用户组对应的用户
+ * @param data
+ */
+export const deleteOrgUserFromUserGroup = (data: { userRoleId: string; userIds: string[]; organizationId: string }) => {
+    return alovaInstance.Post<string>(`/user/role/organization/remove-member`, data)
 }

@@ -192,6 +192,10 @@ onMounted(() => {
                @click="handleListItemClick(element)">
             <create-or-update-user-group :list="systemUserGroupList">
               <div class="flex max-w-[100%] grow flex-row items-center justify-between">
+                <div class="list-item-name one-line-text text-[var(--color-text-1)]"
+                     :class="{ '!text-blue-500': element.id === currentId }">
+                  {{ element.name }}
+                </div>
                 <div v-if="element.type === systemType ||
                     (isSystemShowAll &&
                       !element.internal &&
@@ -249,9 +253,8 @@ onMounted(() => {
             >
               <div class="flex w-full grow flex-row items-center justify-between">
                 <div class="flex w-[calc(100%-56px)] items-center gap-[4px]">
-                  <div :class="`list-item-name one-line-text   ${
-                                          systemType === AuthScopeEnum.ORGANIZATION ? 'max-w-[calc(100%-86px)]' : 'w-full'
-                                        } ${element.id === currentId ? 'text-blue-500' : ''}`">
+                  <div class="list-item-name one-line-text text-[var(--color-text-1)]"
+                       :class="{ '!text-blue-500': element.id === currentId }">
                     {{ element.name }}
                   </div>
                   <div v-if="systemType === AuthScopeEnum.ORGANIZATION"
@@ -317,6 +320,11 @@ onMounted(() => {
           >
             <create-or-update-user-group :list="projectUserGroupList">
               <div class="flex max-w-[100%] grow flex-row items-center justify-between">
+                <div :class="`list-item-name one-line-text   ${
+                                          systemType === AuthScopeEnum.ORGANIZATION ? 'max-w-[calc(100%-86px)]' : 'w-full'
+                                        } ${element.id === currentId ? 'text-blue-500' : ''}`">
+                  {{ element.name }}
+                </div>
                 <div
                     v-if="
                     element.type === systemType ||

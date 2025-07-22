@@ -3,6 +3,7 @@ package cn.master.luna.controller;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.dto.PermissionDefinitionItem;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberEditRequest;
 import cn.master.luna.entity.request.OrganizationUserRoleMemberRequest;
 import cn.master.luna.entity.request.PermissionSettingUpdateRequest;
@@ -10,6 +11,7 @@ import cn.master.luna.service.SystemUserRoleService;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -160,5 +162,14 @@ public class SystemUserRoleController {
     @Operation(summary = "项目管理-项目与权限-用户组-修改用户组对应的权限配置")
     public void updateProjectPermissionSetting(@Validated @RequestBody PermissionSettingUpdateRequest request) {
         systemUserRoleService.updateProjectPermissionSetting(request);
+    }
+
+    @GetMapping("/organization/get-member/option/{organizationId}/{roleId}")
+    @Operation(summary = "系统设置-组织-用户组-获取成员下拉选项")
+    public List<UserExtendDTO> getMember(@PathVariable String organizationId,
+                                         @PathVariable String roleId,
+                                         @Schema(description = "查询关键字，根据邮箱和用户名查询")
+                                         @RequestParam(required = false) String keyword) {
+        return systemUserRoleService.getMember(organizationId, roleId, keyword);
     }
 }

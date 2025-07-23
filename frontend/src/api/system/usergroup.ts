@@ -13,17 +13,17 @@ import type {IUserSelectorOption} from '/@/components/base-user-selector/types.t
  * 系统-获取用户组列表
  */
 export const fetchUserGroupList = () => {
-    return alovaInstance.Get<UserGroupItem[]>('/user/role/global/list')
+    return alovaInstance.Get<UserGroupItem[]>('/user/role/global/list', {cacheFor: 600})
 }
 /**
  * 组织-获取用户组列表
  * @param organizationId
  */
 export const fetchOrgUserGroupList = (organizationId: string) => {
-    return alovaInstance.Get<UserGroupItem[]>(`/user/role/organization/list/${organizationId}`)
+    return alovaInstance.Get<UserGroupItem[]>(`/user/role/organization/list/${organizationId}`, {cacheFor: 600})
 }
 export const fetchProjectUserGroupList = (projectId: string) => {
-    return alovaInstance.Get<UserGroupItem[]>(`/user/role/organization/list/${projectId}`)
+    return alovaInstance.Get<UserGroupItem[]>(`/user/role/organization/list/${projectId}`, {cacheFor: 600})
 }
 /**
  * 系统-获取用户组对应的权限配置

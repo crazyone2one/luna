@@ -33,10 +33,25 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
         logs.forEach(log -> {
             log.setContent(subStrContent(log.getContent()));
             mapper.insert(log);
-            if (log.getHistory()) {
+            if (Boolean.TRUE.equals(log.getHistory())) {
                 operationHistoryMapper.insert(getHistory(log));
             }
         });
+    }
+
+    @Override
+    public void add(LogDTO log) {
+        if (StringUtils.isBlank(log.getProjectId())) {
+            log.setProjectId("none");
+        }
+        if (StringUtils.isBlank(log.getCreateUser())) {
+            log.setCreateUser("admin");
+        }
+        log.setContent(subStrContent(log.getContent()));
+        mapper.insert(log);
+        if (Boolean.TRUE.equals(log.getHistory())) {
+            operationHistoryMapper.insert(getHistory(log));
+        }
     }
 
     private String subStrContent(String content) {

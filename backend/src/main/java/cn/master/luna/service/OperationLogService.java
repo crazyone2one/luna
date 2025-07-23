@@ -14,4 +14,6 @@ import java.util.List;
  */
 public interface OperationLogService extends IService<OperationLog> {
     void batchAdd(List<LogDTO> logs);
+
+    void add(LogDTO log);
 }

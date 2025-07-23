@@ -5,7 +5,7 @@ import {computed, h, onMounted, ref, useTemplateRef} from 'vue'
 import {type DataTableColumns, type DataTableRowKey, NButton, NSpace, NSwitch} from 'naive-ui'
 import type {CreateOrUpdateSystemProjectParams, IProjectItem} from '/@/types/project.ts'
 import {usePagination} from 'alova/client'
-import {fetchOrgProjectPage} from '/@/api/system/org-project.ts'
+import {enableOrDisableProjectByOrg, fetchOrgProjectPage} from '/@/api/system/org-project.ts'
 import {useAppStore} from '/@/store'
 import AddProjectModal from '/@/views/setting/organization/project/AddProjectModal.vue'
 import {hasAnyPermission} from '/@/utils/permission.ts'
@@ -89,21 +89,23 @@ const showUserDrawer = (record: IProjectItem) => {
   currentProjectId.value = record.id;
   console.log(record)
 }
+
 /**
  * 切换项目状态
  * @param isEnable
  * @param record
  */
-const handleChangeEnable = (isEnable = true, record: IProjectItem) => {
+const handleChangeEnable = async (isEnable = true, record: IProjectItem) => {
   const title = isEnable ? '启用项目' : '关闭项目';
   const content = isEnable ? '开启后的项目展示在项目切换列表' : '结束后的项目不展示在项目切换列表';
   window.$dialog.error({
     title, content,
     negativeText: '取消',
     positiveText: isEnable ? '确认开启' : '确认关闭',
-    onPositiveClick: () => {
-      console.log(record.id)
-      console.log(isEnable)
+    onPositiveClick: async () => {
+      await enableOrDisableProjectByOrg(record.id, isEnable);
+      window.$message.success(isEnable ? '启用成功' : '关闭成功')
+      await loadList()
     }
   })
 }

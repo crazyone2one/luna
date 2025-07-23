@@ -300,6 +300,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void enable(String id, String userName) {
         checkProjectNotExist(id);
         SystemProject project = new SystemProject();
@@ -310,6 +311,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void disable(String id, String userName) {
         checkProjectNotExist(id);
         SystemProject project = new SystemProject();

@@ -30,4 +30,8 @@ public interface SystemProjectService extends IService<SystemProject> {
     List<UserExtendDTO> getUserAdminList(String organizationId, String keyword);
 
     UserDTO switchProject(ProjectSwitchRequest request, String currentUserId);
+
+    void enable(String id, String userName);
+
+    void disable(String id, String userName);
 }

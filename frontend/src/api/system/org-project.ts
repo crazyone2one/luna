@@ -34,3 +34,11 @@ export const getAdminByProjectByOrg = (organizationId: string, keyword: string) 
 export const switchProject = (data: { projectId: string; userId: string }) => {
     return alovaInstance.Post<ILoginRespInfo>('/project/switch', data)
 }
+/**
+ * 组织-启用或禁用项目
+ * @param id
+ * @param isEnable
+ */
+export const enableOrDisableProjectByOrg = (id: string, isEnable = true) => {
+    return alovaInstance.Get(isEnable ? `/project/organization/enable/${id}` : `/project/organization/disable/${id}`)
+}

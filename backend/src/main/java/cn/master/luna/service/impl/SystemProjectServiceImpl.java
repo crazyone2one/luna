@@ -28,6 +28,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -113,7 +114,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
                             .build();
                     userRoleRelationMapper.insert(userRoleRelation);
                     String logProjectId = OperationLogConstants.SYSTEM;
-                    if (StringUtils.equals(module, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
+                    if (Strings.CS.equals(module, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
                         logProjectId = OperationLogConstants.ORGANIZATION;
                     }
 
@@ -215,7 +216,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         }
         List<SystemProject> temp = allProject;
         return allProject.stream()
-                .filter(project -> StringUtils.equals(project.getId(), projectId))
+                .filter(project -> Strings.CS.equals(project.getId(), projectId))
                 .findFirst()
                 .map(project -> {
                     temp.remove(project);
@@ -251,7 +252,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
             chain.list().forEach(role -> {
                 SystemUser user = QueryChain.of(SystemUser.class).where(SystemUser::getId).eq(role.getUserId()).one();
                 String logProjectId = OperationLogConstants.SYSTEM;
-                if (StringUtils.equals(OperationLogModule.SETTING_ORGANIZATION_PROJECT, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
+                if (Strings.CS.equals(OperationLogModule.SETTING_ORGANIZATION_PROJECT, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
                     logProjectId = OperationLogConstants.ORGANIZATION;
                 }
                 LogDTO logDTO = new LogDTO(logProjectId, systemProject.getOrganizationId(), role.getId(), updateUser, OperationLogType.DELETE.name(), OperationLogModule.SETTING_ORGANIZATION_PROJECT, "删除项目管理员: " + user.getName());
@@ -276,7 +277,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     public List<UserExtendDTO> getUserAdminList(String organizationId, String keyword) {
         checkOrg(organizationId);
         return QueryChain.of(SystemUser.class)
-                .select(QueryMethods.distinct(SystemUser::getId,SystemUser::getName,SystemUser::getEmail,SystemUser::getCreateTime))
+                .select(QueryMethods.distinct(SystemUser::getId, SystemUser::getName, SystemUser::getEmail, SystemUser::getCreateTime))
                 .from(SystemUser.class)
                 .leftJoin(USER_ROLE_RELATION).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
                 .where(USER_ROLE_RELATION.ORGANIZATION_ID.eq(organizationId)
@@ -287,7 +288,7 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
 
     @Override
     public UserDTO switchProject(ProjectSwitchRequest request, String currentUserId) {
-        if (!StringUtils.equals(currentUserId, request.getUserId())) {
+        if (!Strings.CS.equals(currentUserId, request.getUserId())) {
             throw new CustomException("未经授权");
         }
         if (mapper.selectOneById(request.getProjectId()) == null) {
@@ -296,6 +297,26 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         SystemUser build = SystemUser.builder().id(request.getUserId()).lastProjectId(request.getProjectId()).build();
         systemUserMapper.update(build);
         return userLoginService.getUserDTO(request.getUserId());
+    }
+
+    @Override
+    public void enable(String id, String userName) {
+        checkProjectNotExist(id);
+        SystemProject project = new SystemProject();
+        project.setId(id);
+        project.setEnable(true);
+        project.setUpdateUser(userName);
+        mapper.update(project);
+    }
+
+    @Override
+    public void disable(String id, String userName) {
+        checkProjectNotExist(id);
+        SystemProject project = new SystemProject();
+        project.setId(id);
+        project.setEnable(false);
+        project.setUpdateUser(userName);
+        mapper.update(project);
     }
 
     private void checkOrg(String organizationId) {

@@ -96,4 +96,16 @@ public class SystemProjectController {
         result.put("userInfo", systemProjectService.switchProject(request, SessionUtils.getCurrentUserId()));
         return ResultHandler.success(result);
     }
+
+    @GetMapping("/organization/enable/{id}")
+    @Operation(summary = "系统设置-组织-项目-启用")
+    public void enable(@PathVariable @Parameter(description = "<UNK>") String id) {
+        systemProjectService.enable(id, SessionUtils.getUserName());
+    }
+
+    @GetMapping("/organization/disable/{id}")
+    @Operation(summary = "系统设置-组织-项目-禁用")
+    public void disable(@PathVariable @Parameter(description = "<UNK>") String id) {
+        systemProjectService.disable(id, SessionUtils.getUserName());
+    }
 }

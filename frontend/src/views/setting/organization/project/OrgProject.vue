@@ -8,10 +8,12 @@ import {usePagination} from 'alova/client'
 import {fetchOrgProjectPage} from '/@/api/system/org-project.ts'
 import {useAppStore} from '/@/store'
 import AddProjectModal from '/@/views/setting/organization/project/AddProjectModal.vue'
+import {hasAnyPermission} from '/@/utils/permission.ts'
 
 const addProjectModalRef = useTemplateRef<InstanceType<typeof AddProjectModal>>('addProjectModal')
 const appStore = useAppStore();
 const keyword = ref('');
+const currentProjectId = ref('');
 const addProjectVisible = ref(false);
 const currentUpdateProject = ref<CreateOrUpdateSystemProjectParams>();
 const currentOrgId = computed(() => appStore.currentOrgId);
@@ -33,12 +35,23 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
     {
       title: '成员',
       key: 'memberCount',
+      render(record) {
+        if (hasAnyPermission(['ORGANIZATION_PROJECT:READ+ADD_MEMBER', 'ORGANIZATION_PROJECT:READ'])) {
+          return h(NButton, {
+            text: true,
+            type: 'primary',
+            onClick: () => showUserDrawer(record)
+          }, {default: () => record.memberCount})
+        } else {
+          return h('span', null, {default: () => record.memberCount})
+        }
+      }
     },
     {
       title: '状态',
       key: 'enable',
       render(row) {
-        return h(NSwitch, {size: 'small', value: row.enable,}, {})
+        return h(NSwitch, {size: 'small', value: row.enable, onUpdateValue: (v) => handleChangeEnable(v, row)}, {})
       }
     },
     {
@@ -72,6 +85,29 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
     }
   ]
 })
+const showUserDrawer = (record: IProjectItem) => {
+  currentProjectId.value = record.id;
+  console.log(record)
+}
+/**
+ * 切换项目状态
+ * @param isEnable
+ * @param record
+ */
+const handleChangeEnable = (isEnable = true, record: IProjectItem) => {
+  const title = isEnable ? '启用项目' : '关闭项目';
+  const content = isEnable ? '开启后的项目展示在项目切换列表' : '结束后的项目不展示在项目切换列表';
+  window.$dialog.error({
+    title, content,
+    negativeText: '取消',
+    positiveText: isEnable ? '确认开启' : '确认关闭',
+    onPositiveClick: () => {
+      console.log(record.id)
+      console.log(isEnable)
+    }
+  })
+}
+
 const handleCheck = (rowKeys: DataTableRowKey[]) => {
   checkedRowKeys.value = rowKeys
 }
@@ -86,6 +122,7 @@ const {data, send: loadList, loading} = usePagination((page, pageSize) => {
   immediate: false,
   data: resp => resp.records,
   total: resp => resp.totalRow,
+  watchingStates: [keyword]
 })
 const showAddProject = () => {
   addProjectVisible.value = true
@@ -105,10 +142,11 @@ onMounted(() => {
 <template>
   <base-card :show="loading">
     <template #header>
-      <n-button type="primary" @click="showAddProject"> 创建项目</n-button>
+      <n-button v-permission="['ORGANIZATION_PROJECT:READ+ADD']" type="primary" @click="showAddProject"> 创建项目
+      </n-button>
     </template>
     <template #header-extra>
-      <n-input class="w-[240px]" clearable placeholder="通过 ID/名称搜索"/>
+      <n-input v-model:value="keyword" class="w-[240px]" clearable placeholder="通过 ID/名称搜索"/>
     </template>
     <n-data-table
         :columns="columns"

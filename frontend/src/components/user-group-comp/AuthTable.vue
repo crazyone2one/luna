@@ -40,6 +40,18 @@ const systemAdminDisabled = computed(() => {
 
   return props.disabled;
 });
+const handleAllAuthChangeByCheckbox = () => {
+  if (!tableData.value) return;
+  allChecked.value = !allChecked.value;
+  allIndeterminate.value = false;
+  const tmpArr = tableData.value;
+  tmpArr.forEach((item) => {
+    item.enable = allChecked.value;
+    item.indeterminate = false;
+    item.perChecked = allChecked.value ? item.permissions?.map((ele) => ele.id) : [];
+  });
+  if (!canSave.value) canSave.value = true;
+}
 const columns = computed<DataTableColumns<AuthTableItem>>(() => {
   return [
     // {
@@ -64,8 +76,11 @@ const columns = computed<DataTableColumns<AuthTableItem>>(() => {
               re.push(
                   h(NCheckbox,
                       {
-                        checked: allChecked.value, disabled: systemAdminDisabled.value || props.disabled,
-                        class: 'mr-[7px]', indeterminate: allIndeterminate.value
+                        checked: allChecked.value,
+                        disabled: systemAdminDisabled.value || props.disabled,
+                        class: 'mr-[7px]',
+                        indeterminate: allIndeterminate.value,
+                        onUpdateChecked: () => handleAllAuthChangeByCheckbox()
                       },
                       {})
               )
@@ -175,7 +190,6 @@ const handleRowAuthChange = (value: boolean | (string | number | boolean)[], row
   tableData.value = [...tmpArr];
   handleAllChange();
   if (!canSave.value) canSave.value = true;
-  console.log(tableData.value)
 }
 const transformData = (data: UserGroupAuthSetting[]) => {
   const result: AuthTableItem[] = [];
@@ -286,6 +300,7 @@ defineExpose({
 
   padding: 0 16px 16px;
 }
+
 .footer {
   display: flex;
   justify-content: flex-end;

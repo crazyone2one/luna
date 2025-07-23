@@ -1,5 +1,10 @@
 import {alovaInstance} from '/@/api'
-import type {UserGroupAuthSetting, UserGroupItem} from '/@/types/user-group.ts'
+import type {
+    OrgUserGroupParams,
+    SystemUserGroupParams,
+    UserGroupAuthSetting,
+    UserGroupItem
+} from '/@/types/user-group.ts'
 import type {ICommonPage, ITableQueryParams} from '/@/types/common.ts'
 import type {UserListItem} from '/@/types/user.ts'
 import type {IUserSelectorOption} from '/@/components/base-user-selector/types.ts'
@@ -25,21 +30,21 @@ export const fetchProjectUserGroupList = (projectId: string) => {
  * @param id
  */
 export const fetchGlobalUSetting = (id: string) => {
-    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/global/permission/setting/${id}`)
+    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/global/permission/setting/${id}`, {cacheFor: 600})
 }
 /**
  * 组织-获取用户组对应的权限配置
  * @param id
  */
 export const fetchOrgUSetting = (id: string) => {
-    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/organization/permission/setting/${id}`)
+    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/organization/permission/setting/${id}`, {cacheFor: 600})
 }
 /**
  * 项目-获取用户组对应的权限
  * @param id
  */
 export const fetchAuthByUserGroup = (id: string) => {
-    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/project/permission/setting/${id}`)
+    return alovaInstance.Get<UserGroupAuthSetting[]>(`/user/role/project/permission/setting/${id}`, {cacheFor: 600})
 }
 /**
  * 系统-获取用户组对应的用户列表
@@ -96,4 +101,25 @@ export const deleteUserFromUserGroup = (id: string) => {
  */
 export const deleteOrgUserFromUserGroup = (data: { userRoleId: string; userIds: string[]; organizationId: string }) => {
     return alovaInstance.Post<string>(`/user/role/organization/remove-member`, data)
+}
+/**
+ * 系统-创建或修改用户组
+ * @param data
+ */
+export const updateOrAddUserGroup = (data: SystemUserGroupParams) => {
+    return alovaInstance.Post<UserGroupItem>(data.id ? '/user/role/global/update' : `/user/role/global/save`, data)
+}
+/**
+ * 组织-创建或修改用户组
+ * @param data
+ */
+export const updateOrAddOrgUserGroup = (data: OrgUserGroupParams) => {
+    return alovaInstance.Post<UserGroupItem>(data.id ? '/user/role/organization/update' : `/user/role/organization/save`, data)
+}
+/**
+ * 项目-创建或修改用户组
+ * @param data
+ */
+export const updateOrAddProjectUserGroup = (data: SystemUserGroupParams) => {
+    return alovaInstance.Post<UserGroupItem>(data.id ? '/user/role/project/update' : `/user/role/project/add`, data)
 }

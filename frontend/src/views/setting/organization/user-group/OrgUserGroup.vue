@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
+import {computed, nextTick, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
 import {AuthScopeEnum} from '/@/enums/common.ts'
 import type {CurrentUserGroupItem} from '/@/types/user-group.ts'
 import UserTable from '/@/components/user-group-comp/UserTable.vue'
@@ -25,15 +25,18 @@ const userGroupLeftRef = useTemplateRef<InstanceType<typeof UserGroupLeft>>('use
 const couldShowUser = computed(() => currentUserGroupItem.value.type === AuthScopeEnum.ORGANIZATION);
 const couldShowAuth = computed(() => currentUserGroupItem.value.id !== 'admin');
 const currentKeyword = ref('');
-// const tableSearch = () => {
-//   if (currentTable.value === 'user' && userTableRef.value) {
-//     userTableRef.value.fetchData();
-//   } else if (!userTableRef.value) {
-//     nextTick(() => {
-//       userTableRef.value?.fetchData();
-//     });
-//   }
-// }
+const tableSearch = () => {
+  if (currentTable.value === 'user' && userTableRef.value) {
+    userTableRef.value.fetchData();
+  } else if (!userTableRef.value) {
+    nextTick(() => {
+      userTableRef.value?.fetchData();
+    });
+  }
+}
+const handleSearch = () => {
+  tableSearch();
+};
 const handleSelect = (item: CurrentUserGroupItem) => {
   currentUserGroupItem.value = item;
 };
@@ -71,7 +74,11 @@ onMounted(() => {
               <n-radio-button v-if="couldShowUser" value="user" class="p-[2px]">成员</n-radio-button>
             </n-radio-group>
             <div class="flex items-center">
-              <n-input v-if="currentTable === 'user'" class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索"/>
+              <n-input v-if="currentTable === 'user'"
+                       v-model:value="currentKeyword"
+                       class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索"
+                       clearable
+                       @keyup.enter="handleSearch"/>
             </div>
           </div>
           <div>

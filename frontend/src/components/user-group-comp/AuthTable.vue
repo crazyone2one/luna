@@ -42,9 +42,9 @@ const systemAdminDisabled = computed(() => {
 });
 const columns = computed<DataTableColumns<AuthTableItem>>(() => {
   return [
-    {
-      type: 'selection',
-    },
+    // {
+    //   type: 'selection',
+    // },
     {
       title: '功能',
       key: 'ability',
@@ -245,11 +245,21 @@ const handleAllChange = (isInit = false) => {
   }
   if (!isInit && !canSave.value) canSave.value = true;
 }
+const handleReset = () => {
+  if (props.current.id) {
+    initData(props.current.id);
+  }
+}
 watchEffect(() => {
   if (props.current.id) {
     initData(props.current.id)
   }
 })
+defineExpose({
+  canSave,
+  // handleSave,
+  handleReset,
+});
 </script>
 
 <template>
@@ -264,13 +274,18 @@ watchEffect(() => {
     <div v-if="props.showBottom && props.current.id !== 'admin' && !systemAdminDisabled"
          v-permission="props.savePermission || []"
          class="footer">
-      <n-button :disabled="!canSave">撤销修改</n-button>
-      <n-button v-permission="props.savePermission || []" type="tertiary" :disabled="!canSave">保存</n-button>
+      <n-button :disabled="!canSave" @click="handleReset">撤销修改</n-button>
+      <n-button v-permission="props.savePermission || []" type="primary" :disabled="!canSave">保存</n-button>
     </div>
   </div>
 </template>
 
 <style scoped>
+.group-auth-table {
+  @apply flex-1 overflow-hidden;
+
+  padding: 0 16px 16px;
+}
 .footer {
   display: flex;
   justify-content: flex-end;

@@ -4,9 +4,9 @@ import BaseIcon from '/src/components/BaseIcon.vue'
 import {ref} from 'vue'
 import BaseUserSelector from '/@/components/base-user-selector/index.vue'
 
+
 const props = withDefaults(
     defineProps<{
-      loadOptionParams: Record<string, any>; // 加载选项的参数
       okLoading?: boolean;
     }>(), {okLoading: false,}
 );
@@ -42,12 +42,14 @@ const handleConfirm = () => {
   </div>
   <div v-else>
     <div class="flex flex-row items-center">
-      <base-user-selector v-bind="$attrs" :load-option-params="props.loadOptionParams"
+      <base-user-selector v-bind="$attrs"
+                          :load-option-params="$attrs.loadOptionParams as Record<string,any>"
                           v-model:model-value="memberList"
                           class="!w-[260px]"/>
       <n-button size="tiny" :disabled="!memberList.length" class="ml-[12px]"
                 :loading="props.okLoading"
-                @click="handleConfirm">确认</n-button>
+                @click="handleConfirm">确认
+      </n-button>
       <n-button size="tiny" class="ml-[12px] !border-[var(--color-text-input-border)] !text-[var(--color-text-1)]"
                 @click="handleCancel">
         取消

@@ -110,6 +110,7 @@ const projectMoreAction: DropdownOption[] = [
   }
 ]
 const appStore = useAppStore()
+
 const initData = async (id?: string, isSelect = true) => {
   let res: UserGroupItem[] = [];
   if (systemType === AuthScopeEnum.SYSTEM && hasAnyPermission(['SYSTEM_USER_ROLE:READ'])) {
@@ -128,7 +129,7 @@ const initData = async (id?: string, isSelect = true) => {
         if (item) {
           handleListItemClick(item);
         } else {
-          window.$message.warning("资源已被删除")
+          window.$message.warning('资源已被删除')
           handleListItemClick(res[0]);
         }
       } else {
@@ -152,6 +153,13 @@ const handleCreateUG = (scoped: String) => {
     projectUserGroupVisible.value = true;
   }
 };
+const keyword = ref('')
+const handleSearch = () => {
+  console.log(keyword.value)
+}
+const handleCreateUserGroup = (id: string) => {
+  initData(id)
+}
 defineExpose({
   initData,
 });
@@ -162,8 +170,8 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col px-[16px] pb-[16px]">
-    <div class="sticky top-0 z-[999] bg-[var(--color-text-fff)] pb-[8px] pt-[16px]">
-      <n-input clearable placeholder="请输入用户组名称"/>
+    <div class="sticky top-0 z-[999] pb-[8px] pt-[16px]">
+      <n-input v-model:value="keyword" clearable placeholder="请输入用户组名称" @keyup.enter.native="handleSearch"/>
     </div>
     <div v-if="showSystem" v-permission="['SYSTEM_USER_ROLE:READ']" class="mt-2">
       <div class="flex items-center justify-between px-[4px] py-[7px]">
@@ -192,7 +200,7 @@ onMounted(() => {
                @click="handleListItemClick(element)">
             <create-or-update-user-group :list="systemUserGroupList">
               <div class="flex max-w-[100%] grow flex-row items-center justify-between">
-                <div class="list-item-name one-line-text text-[var(--color-text-1)]"
+                <div class="list-item-name one-line-text"
                      :class="{ '!text-blue-500': element.id === currentId }">
                   {{ element.name }}
                 </div>
@@ -223,7 +231,7 @@ onMounted(() => {
     </div>
     <div v-if="showOrg" v-permission="['ORGANIZATION_USER_ROLE:READ']" class="mt-2">
       <div class="flex items-center justify-between px-[4px] py-[7px]">
-        <div class="flex flex-row items-center gap-1 text-[var(--color-text-4)]">
+        <div class="flex flex-row items-center gap-1">
           <base-icon v-if="orgToggle" class="cursor-pointer" type="CaretDown" size="12" @click="orgToggle = false"/>
           <base-icon v-else class="cursor-pointer" type="CaretUp" size="12" @click="orgToggle = true"/>
           <div class="text-[14px]">
@@ -233,11 +241,12 @@ onMounted(() => {
         <create-or-update-user-group :list="orgUserGroupList"
                                      :visible="orgUserGroupVisible"
                                      :auth-scope="AuthScopeEnum.ORGANIZATION"
-                                     @cancel="orgUserGroupVisible = false">
+                                     @cancel="orgUserGroupVisible = false"
+                                     @submit="handleCreateUserGroup">
           <n-tooltip>
             <template #trigger>
               <base-icon class="cursor-pointer text-[rgb(64, 128, 255)] hover:text-[rgb(106,161,255)]"
-                         type="add"  size="20"
+                         type="add" size="20"
                          @click="orgUserGroupVisible=true"/>
             </template>
             <span>创建组织用户组</span>
@@ -247,13 +256,12 @@ onMounted(() => {
       <Transition>
         <div v-if="orgToggle">
           <div v-for="element in orgUserGroupList" :key="element.id" class="list-item"
-               :class="{ '!bg-[#98B193FF]': element.id === currentId }"
                @click="handleListItemClick(element)">
             <create-or-update-user-group :list="orgUserGroupList"
             >
               <div class="flex w-full grow flex-row items-center justify-between">
                 <div class="flex w-[calc(100%-56px)] items-center gap-[4px]">
-                  <div class="list-item-name one-line-text text-[var(--color-text-1)]"
+                  <div class="list-item-name one-line-text"
                        :class="{ '!text-blue-500': element.id === currentId }">
                     {{ element.name }}
                   </div>
@@ -367,6 +375,7 @@ onMounted(() => {
   width: 24px;
   height: 24px;
 }
+
 .v-enter-active,
 .v-leave-active {
   transition: opacity 0.5s ease;

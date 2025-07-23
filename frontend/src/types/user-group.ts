@@ -80,3 +80,14 @@ export interface AuthTableItem {
     rowSpan?: number;
     indeterminate?: boolean;
 }
+export interface BaseUserGroupParams {
+    id?: string; // 组ID
+    name?: string; // 名称
+    type?: string; // 组类型：SYSTEM | PROJECT | ORGANIZATION
+}
+export interface OrgUserGroupParams extends BaseUserGroupParams{
+    scopeId: string; // 组织ID
+}
+export interface SystemUserGroupParams extends BaseUserGroupParams{
+    scopeId?: string; // 组织ID
+}

@@ -32,7 +32,7 @@ const props = defineProps<{
   updatePermission?: string[];
 }>();
 const {send: loadList, data, loading} = usePagination((page, pageSize) => {
-  const param = {page, pageSize, roleId: '', userRoleId: '', organizationId: ''}
+  const param = {page, pageSize, roleId: '', userRoleId: '', organizationId: '', 'keyword': props.keyword}
   if (systemType === AuthScopeEnum.SYSTEM) {
     param.roleId = props.current.id
     return fetchUserByUserGroup(param)
@@ -93,6 +93,7 @@ const userSelectorProps = computed(() => {
       loadOptionParams: {
         roleId: props.current.id,
       },
+      keyword: props.keyword,
       disabledKey: 'exclude',
     };
   }
@@ -102,6 +103,7 @@ const userSelectorProps = computed(() => {
       roleId: props.current.id,
       organizationId: currentOrgId.value,
     },
+    keyword: props.keyword,
     disabledKey: 'checkRoleFlag',
   };
 })
@@ -165,11 +167,13 @@ defineExpose({
 <template>
   <base-card v-model:show="loading">
     <base-confirm-user-selector v-bind="userSelectorProps" :ok-loading="okLoading" @confirm="handleAddMember"/>
-    <n-data-table
-        :columns="columns"
-        :data="data"
-        :row-key="(row: UserListItem) => row.id"
-    />
+    <div class="mt-2">
+      <n-data-table
+          :columns="columns"
+          :data="data"
+          :row-key="(row: UserListItem) => row.id"
+      />
+    </div>
   </base-card>
 </template>
 

@@ -1,19 +1,20 @@
 package cn.master.luna.controller;
 
+import cn.master.luna.constants.Created;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.dto.PermissionDefinitionItem;
 import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.request.OrganizationUserRoleMemberEditRequest;
-import cn.master.luna.entity.request.OrganizationUserRoleMemberRequest;
-import cn.master.luna.entity.request.PermissionSettingUpdateRequest;
+import cn.master.luna.entity.request.*;
 import cn.master.luna.service.SystemUserRoleService;
+import cn.master.luna.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,13 +37,34 @@ public class SystemUserRoleController {
     /**
      * 添加用户组。
      *
-     * @param systemUserRole 用户组
+     * @param request 用户组
      * @return {@code true} 添加成功，{@code false} 添加失败
      */
-    @PostMapping("save")
-    @Operation(description = "保存用户组")
-    public boolean save(@RequestBody @Parameter(description = "用户组") SystemUserRole systemUserRole) {
-        return systemUserRoleService.save(systemUserRole);
+    @PostMapping("/organization/save")
+    @Operation(description = "系统设置-组织-用户组-添加用户组")
+    public SystemUserRole save(@Validated({Created.class}) @RequestBody @Parameter(description = "用户组") OrganizationUserRoleEditRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        userRole.setCreateUser(SessionUtils.getUserName());
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.add(userRole);
+    }
+
+    @PostMapping("/global/save")
+    @Operation(description = "系统设置-系统-用户组-添加自定义全局用户组")
+    public SystemUserRole saveGlobalUserRole(@Validated({Created.class}) @RequestBody @Parameter(description = "用户组") UserRoleUpdateRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        userRole.setCreateUser(SessionUtils.getUserName());
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.saveGlobalUserRole(userRole);
+    }
+
+    @PostMapping("/project/save")
+    @Operation(description = "项目管理-项目与权限-用户组-添加用户组")
+    public SystemUserRole saveProjectUserRole(@Validated({Created.class}) @RequestBody @Parameter(description = "用户组") ProjectUserRoleEditRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        userRole.setCreateUser(SessionUtils.getUserName());
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.saveProjectUserRole(userRole);
     }
 
     /**
@@ -60,13 +82,30 @@ public class SystemUserRoleController {
     /**
      * 根据主键更新用户组。
      *
-     * @param systemUserRole 用户组
-     * @return {@code true} 更新成功，{@code false} 更新失败
+     * @param request 用户组
+     * @return {@code SystemUserRole} 更新成功，{@code false} 更新失败
      */
-    @PutMapping("update")
-    @Operation(description = "根据主键更新用户组")
-    public boolean update(@RequestBody @Parameter(description = "用户组主键") SystemUserRole systemUserRole) {
-        return systemUserRoleService.updateById(systemUserRole);
+    @PostMapping("/organization/update")
+    @Operation(description = "系统设置-组织-用户组-修改用户组")
+    public SystemUserRole update(@RequestBody @Parameter(description = "用户组主键") OrganizationUserRoleEditRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.update(userRole);
+    }
+
+    @PostMapping("/global/update")
+    @Operation(description = "系统设置-系统-用户组-更新自定义全局用户组")
+    public SystemUserRole updateGlobalUserRole(@RequestBody @Parameter(description = "用户组主键") UserRoleUpdateRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.updateGlobalUserRole(userRole);
+    }
+    @PostMapping("/project/update")
+    @Operation(description = "项目管理-项目与权限-用户组-修改用户组")
+    public SystemUserRole updateProjectUserRole(@RequestBody @Parameter(description = "用户组主键") ProjectUserRoleEditRequest request) {
+        SystemUserRole userRole = new SystemUserRole();
+        BeanUtils.copyProperties(request, userRole);
+        return systemUserRoleService.updateProjectUserRole(userRole);
     }
 
     /**

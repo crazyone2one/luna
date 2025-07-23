@@ -15,6 +15,7 @@ import com.mybatisflex.core.query.QueryChain;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
@@ -25,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static cn.master.luna.entity.table.SystemOrganizationTableDef.SYSTEM_ORGANIZATION;
 import static cn.master.luna.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
@@ -71,12 +71,12 @@ public class UserLoginServiceImpl implements UserLoginService {
         SystemUser userFromDB = QueryChain.of(SystemUser.class).where(SYSTEM_USER.ID.eq(user.getId())).one();
         // last organization id 变了
         if (user.getLastOrganizationId() != null
-                && !StringUtils.equals(user.getLastOrganizationId(), userFromDB.getLastOrganizationId())
+                && !Strings.CS.equals(user.getLastOrganizationId(), userFromDB.getLastOrganizationId())
                 && !isSuperUser(user.getId())) {
             List<SystemProject> projects = getProjectListByWsAndUserId(user.getId(), user.getLastOrganizationId());
             if (!projects.isEmpty()) {
                 // 如果传入的 last_project_id 是 last_organization_id 下面的
-                boolean present = projects.stream().anyMatch(p -> StringUtils.equals(p.getId(), user.getLastProjectId()));
+                boolean present = projects.stream().anyMatch(p -> Strings.CS.equals(p.getId(), user.getLastProjectId()));
                 if (!present) {
                     user.setLastProjectId(projects.getFirst().getId());
                 }
@@ -111,7 +111,7 @@ public class UserLoginServiceImpl implements UserLoginService {
             return permissionDTO;
         }
         permissionDTO.setUserRoleRelations(userRoleRelations);
-        List<String> roleList = userRoleRelations.stream().map(UserRoleRelation::getRoleId).collect(Collectors.toList());
+        List<String> roleList = userRoleRelations.stream().map(UserRoleRelation::getRoleId).toList();
         List<SystemUserRole> userRoles = QueryChain.of(SystemUserRole.class).where(SystemUserRole::getId).in(roleList).list();
         permissionDTO.setUserRoles(userRoles);
         for (SystemUserRole gp : userRoles) {
@@ -132,7 +132,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(userId)).list();
         List<SystemProject> projectList = new ArrayList<>();
         userRoleRelations.forEach(userRoleRelation -> projects.forEach(project -> {
-            if (StringUtils.equals(userRoleRelation.getSourceId(), project.getId()) && !projectList.contains(project)) {
+            if (Strings.CS.equals(userRoleRelation.getSourceId(), project.getId()) && !projectList.contains(project)) {
                 projectList.add(project);
             }
 
@@ -160,7 +160,7 @@ public class UserLoginServiceImpl implements UserLoginService {
     private void checkNewOrganizationAndProject(UserDTO user) {
         List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations();
         List<String> projectRoleIds = user.getUserRoles()
-                .stream().filter(ug -> StringUtils.equals(ug.getType(), UserRoleType.PROJECT.name()))
+                .stream().filter(ug -> Strings.CS.equals(ug.getType(), UserRoleType.PROJECT.name()))
                 .map(SystemUserRole::getId)
                 .toList();
         List<UserRoleRelation> project = userRoleRelations.stream().filter(ug -> projectRoleIds.contains(ug.getRoleId()))
@@ -168,7 +168,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         if (project.isEmpty()) {
             List<String> organizationIds = user.getUserRoles()
                     .stream()
-                    .filter(ug -> StringUtils.equals(ug.getType(), UserRoleType.ORGANIZATION.name()))
+                    .filter(ug -> Strings.CS.equals(ug.getType(), UserRoleType.ORGANIZATION.name()))
                     .map(SystemUserRole::getId)
                     .toList();
             List<UserRoleRelation> organizations = userRoleRelations.stream().filter(ug -> organizationIds.contains(ug.getRoleId()))
@@ -224,7 +224,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                 return false;
             }
             List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations().stream()
-                    .filter(ug -> StringUtils.equals(user.getLastOrganizationId(), ug.getSourceId()))
+                    .filter(ug -> Strings.CS.equals(user.getLastOrganizationId(), ug.getSourceId()))
                     .toList();
             if (!userRoleRelations.isEmpty()) {
                 List<SystemProject> projects = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ORGANIZATION_ID.eq(user.getLastOrganizationId()).and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
@@ -240,7 +240,7 @@ public class UserLoginServiceImpl implements UserLoginService {
 
                 List<UserRoleRelation> roleRelations = user.getUserRoleRelations();
                 List<String> projectRoleIds = user.getUserRoles()
-                        .stream().filter(ug -> StringUtils.equals(ug.getType(), UserRoleType.PROJECT.name()))
+                        .stream().filter(ug -> Strings.CS.equals(ug.getType(), UserRoleType.PROJECT.name()))
                         .map(SystemUserRole::getId)
                         .toList();
                 List<String> projectIdsWithPermission = roleRelations.stream().filter(ug -> projectRoleIds.contains(ug.getRoleId()))
@@ -255,7 +255,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                     updateUser(user);
                     return true;
                 }
-                Optional<SystemProject> first = projects.stream().filter(p -> StringUtils.equals(intersection.getFirst(), p.getId())).findFirst();
+                Optional<SystemProject> first = projects.stream().filter(p -> Strings.CS.equals(intersection.getFirst(), p.getId())).findFirst();
                 if (first.isPresent()) {
                     SystemProject project = first.get();
                     String wsId = project.getOrganizationId();
@@ -273,13 +273,13 @@ public class UserLoginServiceImpl implements UserLoginService {
     private boolean hasLastProjectPermission(UserDTO user) {
         if (StringUtils.isNotBlank(user.getLastProjectId())) {
             List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations().stream()
-                    .filter(ug -> StringUtils.equals(user.getLastProjectId(), ug.getSourceId()))
+                    .filter(ug -> Strings.CS.equals(user.getLastProjectId(), ug.getSourceId()))
                     .toList();
             if (!userRoleRelations.isEmpty()) {
                 List<SystemProject> projects = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(user.getLastProjectId()).and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
                 if (!projects.isEmpty()) {
                     SystemProject project = projects.getFirst();
-                    if (StringUtils.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
+                    if (Strings.CS.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
                         return true;
                     }
                     // last_project_id 和 last_organization_id 对应不上了
@@ -299,7 +299,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                 List<SystemProject> projects = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(user.getLastProjectId()).and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
                 if (!projects.isEmpty()) {
                     SystemProject project = projects.getFirst();
-                    if (StringUtils.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
+                    if (Strings.CS.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
                         return true;
                     }
                     // last_project_id 和 last_organization_id 对应不上了

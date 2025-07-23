@@ -1,13 +1,17 @@
 package cn.master.luna.controller;
 
+import cn.master.luna.constants.OperationLogType;
 import cn.master.luna.entity.SystemProject;
 import cn.master.luna.entity.dto.ProjectDTO;
 import cn.master.luna.entity.request.ProjectSwitchRequest;
 import cn.master.luna.handler.ResultHandler;
+import cn.master.luna.handler.annotation.Log;
 import cn.master.luna.service.SystemProjectService;
+import cn.master.luna.service.log.OrganizationProjectLogService;
 import cn.master.luna.util.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -99,13 +103,17 @@ public class SystemProjectController {
 
     @GetMapping("/organization/enable/{id}")
     @Operation(summary = "系统设置-组织-项目-启用")
-    public void enable(@PathVariable @Parameter(description = "<UNK>") String id) {
+    @Parameter(name = "id", description = "项目ID", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.updateLog(#id)", msClass = OrganizationProjectLogService.class)
+    public void enable(@PathVariable String id) {
         systemProjectService.enable(id, SessionUtils.getUserName());
     }
 
     @GetMapping("/organization/disable/{id}")
     @Operation(summary = "系统设置-组织-项目-禁用")
-    public void disable(@PathVariable @Parameter(description = "<UNK>") String id) {
+    @Parameter(name = "id", description = "项目ID", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.updateLog(#id)", msClass = OrganizationProjectLogService.class)
+    public void disable(@PathVariable String id) {
         systemProjectService.disable(id, SessionUtils.getUserName());
     }
 }

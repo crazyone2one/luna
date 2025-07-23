@@ -59,4 +59,13 @@ public class CustomUserDetails implements UserDetails {
     public String getId() {
         return this.user.getId();
     }
+    public String getName() {
+        return this.user.getName();
+    }
+    public String getUserProjectId(){
+        return this.user.getLastProjectId();
+    }
+    public String getUserOrganizationId(){
+        return this.user.getLastOrganizationId();
+    }
 }

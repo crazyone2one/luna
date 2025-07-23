@@ -45,4 +45,16 @@ public interface SystemUserRoleService extends IService<SystemUserRole> {
     List<SystemUserRole> getOrgList(String organizationId);
 
     List<UserExtendDTO> getMember(String organizationId, String roleId, String keyword);
+
+    SystemUserRole update(SystemUserRole userRole);
+
+    SystemUserRole add(SystemUserRole userRole);
+
+    SystemUserRole saveGlobalUserRole(SystemUserRole userRole);
+
+    SystemUserRole updateGlobalUserRole(SystemUserRole userRole);
+
+    SystemUserRole saveProjectUserRole(SystemUserRole userRole);
+
+    SystemUserRole updateProjectUserRole(SystemUserRole userRole);
 }

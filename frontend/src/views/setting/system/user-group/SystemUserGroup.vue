@@ -5,7 +5,7 @@ import UserGroupLeft from '/@/components/user-group-comp/UserGroupLeft.vue'
 import UserTable from '/@/components/user-group-comp/UserTable.vue'
 import AuthTable from '/@/components/user-group-comp/AuthTable.vue'
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
+import {computed, nextTick, onMounted, provide, ref, useTemplateRef, watchEffect} from 'vue'
 import {AuthScopeEnum} from '/@/enums/common.ts'
 import type {CurrentUserGroupItem} from '/@/types/user-group.ts'
 import {useRouter} from 'vue-router'
@@ -25,9 +25,21 @@ const currentUserGroupItem = ref<CurrentUserGroupItem>({
 });
 const couldShowUser = computed(() => currentUserGroupItem.value.type === AuthScopeEnum.SYSTEM);
 const handleSelect = (item: CurrentUserGroupItem) => {
-  console.log(item)
   currentUserGroupItem.value = item;
 };
+const tableSearch = () => {
+  if (currentTable.value === 'user' && userTableRef.value) {
+    userTableRef.value.fetchData();
+  } else if (!userTableRef.value) {
+    nextTick(() => {
+      userTableRef.value?.fetchData();
+    });
+  }
+}
+const handleSearch = (value: string) => {
+  currentKeyword.value = value;
+  tableSearch()
+}
 watchEffect(() => {
   if (!couldShowUser.value) {
     currentTable.value = 'auth';
@@ -61,7 +73,8 @@ onMounted(() => {
                 <n-radio-button value="user" class="p-[2px]">成员</n-radio-button>
               </n-radio-group>
               <div class="flex items-center">
-                <n-input v-if="currentTable === 'user'" class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索"/>
+                <n-input v-if="currentTable === 'user'" class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索"
+                         @clear="handleSearch('')"/>
               </div>
             </div>
           </div>

@@ -1,10 +1,12 @@
 package cn.master.luna.exception;
 
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Created by 11's papa on 2025/7/2
  */
+@Getter
 public class CustomException extends RuntimeException {
     protected IResultCode errorCode;
 
@@ -35,7 +37,4 @@ public class CustomException extends RuntimeException {
         super(message, t);
     }
 
-    public IResultCode getErrorCode() {
-        return errorCode;
-    }
 }

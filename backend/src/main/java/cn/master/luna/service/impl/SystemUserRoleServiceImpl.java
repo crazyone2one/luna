@@ -6,6 +6,7 @@ import cn.master.luna.constants.UserRoleScope;
 import cn.master.luna.constants.UserRoleType;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
+import cn.master.luna.entity.UserRolePermission;
 import cn.master.luna.entity.UserRoleRelation;
 import cn.master.luna.entity.dto.Permission;
 import cn.master.luna.entity.dto.PermissionDefinitionItem;
@@ -99,21 +100,22 @@ public class SystemUserRoleServiceImpl extends ServiceImpl<SystemUserRoleMapper,
 
     @Override
     public void updateProjectPermissionSetting(PermissionSettingUpdateRequest request) {
-        SystemUserRole userRole = mapper.selectOneById(request.getUserRoleId());
-        if (userRole == null) {
-            throw new CustomException(Translator.get("user_role_not_exist"));
-        }
+        SystemUserRole userRole = get(request.getUserRoleId());
         checkProjectUserRole(userRole);
         checkGlobalUserRole(userRole);
         userRolePermissionService.updatePermissionSetting(request);
     }
 
+    private SystemUserRole get(String id) {
+        return queryChain()
+                .where(SystemUserRole::getId).eq(id)
+                .oneOpt()
+                .orElseThrow(() -> new CustomException(Translator.get("user_role_not_exist")));
+    }
+
     @Override
     public void updateOrgPermissionSetting(PermissionSettingUpdateRequest request) {
-        SystemUserRole userRole = mapper.selectOneById(request.getUserRoleId());
-        if (userRole == null) {
-            throw new CustomException(Translator.get("user_role_not_exist"));
-        }
+        SystemUserRole userRole = get(request.getUserRoleId());
         checkOrgUserRole(userRole);
         checkGlobalUserRole(userRole);
         userRolePermissionService.updatePermissionSetting(request);
@@ -244,12 +246,97 @@ public class SystemUserRoleServiceImpl extends ServiceImpl<SystemUserRoleMapper,
         return userExtendDTOS;
     }
 
+    @Override
+    public SystemUserRole update(SystemUserRole userRole) {
+        SystemUserRole oldRole = get(userRole.getId());
+        // 非组织用户组不允许修改, 全局用户组不允许修改
+        checkOrgUserRole(oldRole);
+        checkGlobalUserRole(oldRole);
+        userRole.setType(UserRoleType.ORGANIZATION.name());
+        checkNewRoleExist(userRole);
+        mapper.update(userRole);
+        return userRole;
+    }
+
+    @Override
+    public SystemUserRole add(SystemUserRole userRole) {
+        userRole.setInternal(false);
+        userRole.setType(UserRoleType.ORGANIZATION.name());
+        baseSaveUserRole(userRole);
+        return userRole;
+    }
+
+    @Override
+    public SystemUserRole saveGlobalUserRole(SystemUserRole userRole) {
+        userRole.setInternal(false);
+        userRole.setScopeId(UserRoleScope.GLOBAL);
+        baseSaveUserRole(userRole);
+        return userRole;
+    }
+
+    @Override
+    public SystemUserRole updateGlobalUserRole(SystemUserRole userRole) {
+        SystemUserRole originUserRole = getWithCheck(userRole.getId());
+        checkGlobalUserRole(originUserRole);
+        if (BooleanUtils.isTrue(originUserRole.getInternal())) {
+            throw new CustomException(INTERNAL_USER_ROLE_PERMISSION);
+        }
+        userRole.setInternal(false);
+        checkNewRoleExist(userRole);
+        mapper.update(userRole);
+        return userRole;
+    }
+
+    @Override
+    public SystemUserRole saveProjectUserRole(SystemUserRole userRole) {
+        userRole.setInternal(false);
+        userRole.setType(UserRoleType.PROJECT.name());
+        baseSaveUserRole(userRole);
+        return userRole;
+    }
+
+    @Override
+    public SystemUserRole updateProjectUserRole(SystemUserRole userRole) {
+        SystemUserRole oldRole = get(userRole.getId());
+        // 非项目用户组, 全局用户组不允许修改
+        checkProjectUserRole(oldRole);
+        checkGlobalUserRole(oldRole);
+        userRole.setType(UserRoleType.PROJECT.name());
+        checkNewRoleExist(userRole);
+        mapper.update(userRole);
+        return userRole;
+    }
+
+    private void baseSaveUserRole(SystemUserRole userRole) {
+        checkNewRoleExist(userRole);
+        mapper.insert(userRole);
+        if (Strings.CS.equals(userRole.getType(), UserRoleType.PROJECT.name())) {
+            UserRolePermission initPermission = new UserRolePermission();
+            initPermission.setRoleId(userRole.getId());
+            initPermission.setPermissionId("PROJECT_BASE_INFO:READ");
+            userRolePermissionService.save(initPermission);
+        }
+    }
+
+    private void checkNewRoleExist(SystemUserRole userRole) {
+        if (StringUtils.isBlank(userRole.getName())) {
+            return;
+        }
+        boolean exists = queryChain().where(SYSTEM_USER_ROLE.NAME.eq(userRole.getName())
+                .and(SYSTEM_USER_ROLE.SCOPE_ID.in(Arrays.asList(userRole.getScopeId(), "global")))
+                .and(SYSTEM_USER_ROLE.TYPE.eq(userRole.getType()))
+                .and(SYSTEM_USER_ROLE.ID.ne(userRole.getId()))).exists();
+        if (exists) {
+            throw new CustomException(GLOBAL_USER_ROLE_EXIST);
+        }
+    }
+
     private int getInternal(Boolean internal) {
         return BooleanUtils.isTrue(internal) ? 0 : 1;
     }
 
     private int getTypeOrder(SystemUserRole userRole) {
-        Map<String, Integer> typeOrderMap = new HashMap<>(3);
+        Map<String, Integer> typeOrderMap = HashMap.newHashMap(3);
         typeOrderMap.put(UserRoleType.SYSTEM.name(), 1);
         typeOrderMap.put(UserRoleType.ORGANIZATION.name(), 2);
         typeOrderMap.put(UserRoleType.PROJECT.name(), 3);

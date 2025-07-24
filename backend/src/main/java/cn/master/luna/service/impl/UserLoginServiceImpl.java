@@ -51,11 +51,11 @@ public class UserLoginServiceImpl implements UserLoginService {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         String tokenValue = jwtTokenUtil.generateToken(request.username());
-        UserDTO userDTO = QueryChain.of(SystemUser.class).where(SystemUser::getName).eq(request.username()).oneAs(UserDTO.class);
+        UserDTO userDTO = getUserDTO(request.username());
         autoSwitch(userDTO);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("access_token", tokenValue);
-        result.put("userInfo", getUserDTO(userDTO.getId()));
+        result.put("userInfo", userDTO);
         return ResultHandler.success(result);
     }
 
@@ -88,15 +88,15 @@ public class UserLoginServiceImpl implements UserLoginService {
     }
 
     @Override
-    public UserDTO getUserDTO(String userId) {
-        UserDTO userDTO = systemUserMapper.selectOneWithRelationsByIdAs(userId, UserDTO.class);
+    public UserDTO getUserDTO(String username) {
+        UserDTO userDTO = QueryChain.of(SystemUser.class).where(SystemUser::getName).eq(username).oneAs(UserDTO.class);
         if (userDTO == null) {
             return null;
         }
         if (BooleanUtils.isFalse(userDTO.getEnable())) {
             throw new DisabledException("<UNK>");
         }
-        UserRolePermissionDTO dto = getUserRolePermission(userId);
+        UserRolePermissionDTO dto = getUserRolePermission(userDTO.getId());
         userDTO.setUserRoleRelations(dto.getUserRoleRelations());
         userDTO.setUserRoles(dto.getUserRoles());
         userDTO.setUserRolePermissions(dto.getList());

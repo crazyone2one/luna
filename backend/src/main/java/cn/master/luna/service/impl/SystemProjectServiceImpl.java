@@ -1,17 +1,9 @@
 package cn.master.luna.service.impl;
 
 import cn.master.luna.constants.*;
-import cn.master.luna.entity.SystemOrganization;
-import cn.master.luna.entity.SystemProject;
-import cn.master.luna.entity.SystemUser;
-import cn.master.luna.entity.UserRoleRelation;
-import cn.master.luna.entity.dto.LogDTO;
-import cn.master.luna.entity.dto.ProjectDTO;
-import cn.master.luna.entity.dto.UserDTO;
-import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.request.OrganizationProjectRequest;
-import cn.master.luna.entity.request.ProjectAddMemberBatchRequest;
-import cn.master.luna.entity.request.ProjectSwitchRequest;
+import cn.master.luna.entity.*;
+import cn.master.luna.entity.dto.*;
+import cn.master.luna.entity.request.*;
 import cn.master.luna.exception.CustomException;
 import cn.master.luna.mapper.SystemProjectMapper;
 import cn.master.luna.mapper.SystemUserMapper;
@@ -20,13 +12,16 @@ import cn.master.luna.service.OperationLogService;
 import cn.master.luna.service.SystemProjectService;
 import cn.master.luna.service.UserLoginService;
 import cn.master.luna.util.JacksonUtils;
+import cn.master.luna.util.Translator;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -128,10 +124,10 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
 
     private Map<String, String> addUserPre(List<String> userIds, String createUser, String path, String module, String projectId, SystemProject project) {
         checkProjectNotExist(projectId);
-        List<SystemUser> users = QueryChain.of(SystemUser.class).list();
-//        if (userIds.size() != users.size()) {
-//            throw new CustomException("<用户不存在>");
-//        }
+        List<SystemUser> users = QueryChain.of(SystemUser.class).where(SYSTEM_USER.ID.in(userIds)).list();
+        if (userIds.size() != users.size()) {
+            throw new CustomException(Translator.get("user_not_exist"));
+        }
         //把id和名称放一个map中
         Map<String, String> userMap = users.stream().collect(Collectors.toMap(SystemUser::getId, SystemUser::getName));
         checkOrgRoleExit(userIds, project.getOrganizationId(), createUser, userMap, path, module);
@@ -319,6 +315,196 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         project.setEnable(false);
         project.setUpdateUser(userName);
         mapper.update(project);
+    }
+
+    @Override
+    public Page<UserExtendDTO> getProjectMember(ProjectMemberRequest request) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.select(SYSTEM_USER.ALL_COLUMNS, USER_ROLE_RELATION.ROLE_ID, USER_ROLE_RELATION.CREATE_TIME.as("memberTime"))
+                .from(USER_ROLE_RELATION)
+                .leftJoin(SYSTEM_USER).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
+                .where(USER_ROLE_RELATION.SOURCE_ID.eq(request.getProjectId()))
+                .and(SYSTEM_USER.NAME.like(request.getKeyword())
+                        .or(SYSTEM_USER.EMAIL.like(request.getKeyword()))
+                        .or(SYSTEM_USER.PHONE.like(request.getKeyword())))
+                .orderBy(USER_ROLE_RELATION.CREATE_TIME.desc());
+        Page<UserExtendDTO> page = queryChain()
+                .select("temp.id,temp.name,temp.email,temp.phone")
+                .select("MAX( if (temp.role_id = 'project_admin', true, false)) as adminFlag")
+                .select("MIN(temp.memberTime) as groupTime")
+                .from(queryWrapper).as("temp")
+                .groupBy("temp.id")
+                .orderBy("adminFlag desc", "groupTime desc")
+                .pageAs(new Page<>(request.getPage(), request.getPageSize()), UserExtendDTO.class);
+        if (CollectionUtils.isNotEmpty(page.getRecords())) {
+            List<String> userIds = page.getRecords().stream().map(UserExtendDTO::getId).toList();
+            List<UserRoleOptionDto> userRole = selectProjectUserRoleByUserIds(userIds, request.getProjectId());
+            Map<String, List<UserRoleOptionDto>> roleMap = userRole.stream().collect(Collectors.groupingBy(UserRoleOptionDto::getUserId));
+            page.getRecords().forEach(user -> {
+                if (roleMap.containsKey(user.getId())) {
+                    user.setUserRoleList(roleMap.get(user.getId()));
+                }
+            });
+        }
+        return page;
+    }
+
+    @Override
+    public List<UserExtendDTO> getMemberOption(String projectId, String keyword) {
+        SystemProject project = mapper.selectOneById(projectId);
+        if (project == null) {
+            return new ArrayList<>();
+        }
+        // 组织成员
+        List<UserExtendDTO> orgMembers = getMemberByOrg(project.getOrganizationId(), keyword);
+        if (CollectionUtils.isEmpty(orgMembers)) {
+            return new ArrayList<>();
+        }
+        // 设置是否是项目成员
+        List<String> orgMemberIds = orgMembers.stream().map(UserExtendDTO::getId).toList();
+        List<UserRoleRelation> projectRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.in(orgMemberIds)
+                        .and(USER_ROLE_RELATION.SOURCE_ID.eq(projectId))
+                        .and(USER_ROLE_RELATION.ORGANIZATION_ID.eq(project.getOrganizationId())))
+                .list();
+        if (CollectionUtils.isEmpty(projectRelations)) {
+            orgMembers.forEach(orgMember -> orgMember.setMemberFlag(false));
+        } else {
+            List<String> projectUsers = projectRelations.stream().map(UserRoleRelation::getUserId).distinct().toList();
+            // 已经是项目成员的组织成员, 禁用
+            orgMembers.forEach(orgMember -> orgMember.setMemberFlag(projectUsers.contains(orgMember.getId())));
+        }
+        return orgMembers;
+    }
+
+    @Override
+    public List<OptionDTO> getRoleOption(String projectId) {
+        List<SystemUserRole> userRoles = QueryChain.of(SystemUserRole.class)
+                .where(SYSTEM_USER_ROLE.TYPE.eq(UserRoleType.PROJECT.name())
+                        .and(SYSTEM_USER_ROLE.SCOPE_ID.in(Arrays.asList(projectId, "global"))))
+                .list();
+        return userRoles.stream().map(userRole -> new OptionDTO(userRole.getId(), userRole.getName())).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int removeProjectMember(String projectId, String userId, String createUser) {
+        checkProjectNotExist(projectId);
+        List<SystemUser> users = QueryChain.of(SystemUser.class).where(SYSTEM_USER.ID.eq(userId)).list();
+        SystemUser user = CollectionUtils.isNotEmpty(users) ? users.getFirst() : null;
+        if (user == null) {
+            throw new CustomException(Translator.get("user_not_exist"));
+        }
+        //判断用户是不是最后一个管理员  如果是  就报错
+        boolean exists = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.ne(user.getId())
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(projectId))
+                .and(USER_ROLE_RELATION.ROLE_ID.eq(InternalUserRole.PROJECT_ADMIN.getValue()))).exists();
+        if (!exists) {
+            throw new CustomException(Translator.get("keep_at_least_one_administrator"));
+        }
+        if (Strings.CS.equals(projectId, user.getLastProjectId())) {
+            user.setLastProjectId(StringUtils.EMPTY);
+            systemUserMapper.update(user);
+        }
+        List<LogDTO> logDTOList = new ArrayList<>();
+        QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(user.getId())
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(projectId)));
+        queryChain.list().forEach(userRoleRelation -> {
+            String logProjectId = OperationLogConstants.SYSTEM;
+            if (Strings.CS.equals(OperationLogModule.SETTING_ORGANIZATION_PROJECT, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
+                logProjectId = OperationLogConstants.ORGANIZATION;
+            }
+            LogDTO logDTO = new LogDTO(logProjectId, OperationLogConstants.SYSTEM, userRoleRelation.getId(), createUser, OperationLogType.DELETE.name(), OperationLogModule.SETTING_ORGANIZATION_PROJECT, Translator.get("delete") + Translator.get("project_member") + ": " + user.getName());
+            setLog(logDTO, StringUtils.join(REMOVE_PROJECT_MEMBER, projectId, "/", userId), HttpMethodConstants.GET.name(), logDTOList);
+        });
+        operationLogService.batchAdd(logDTOList);
+        return userRoleRelationMapper.deleteByQuery(queryChain);
+    }
+
+    @Override
+    public Page<UserExtendDTO> getMemberList(ProjectUserRequest request) {
+        checkOrgIsExist(request.getOrganizationId());
+        checkProjectNotExist(request.getProjectId());
+        List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(request.getOrganizationId())).list();
+        List<String> userIds = userRoleRelations.stream().map(UserRoleRelation::getUserId).distinct().toList();
+        if (CollectionUtils.isNotEmpty(userIds)) {
+            QueryWrapper queryWrapper = new QueryWrapper();
+            queryWrapper.select(USER_ROLE_RELATION.ALL_COLUMNS).from(USER_ROLE_RELATION)
+                    .where(USER_ROLE_RELATION.SOURCE_ID.eq(request.getProjectId()));
+            return QueryChain.of(SystemUser.class)
+                    .select(QueryMethods.distinct(SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL))
+                    .select("count(temp.id) > 0 as memberFlag")
+                    .from(SYSTEM_USER).as("u")
+                    .leftJoin(queryWrapper).as("temp").on("temp.user_id = u.id")
+                    .where(SYSTEM_USER.ID.in(userIds)
+                            .and(SYSTEM_USER.NAME.like(request.getKeyword()).or(SYSTEM_USER.EMAIL.like(request.getKeyword()))))
+                    .groupBy(SYSTEM_USER.ID)
+                    .orderBy(SYSTEM_USER.CREATE_TIME.desc())
+                    .pageAs(new Page<>(request.getPage(), request.getPageSize()), UserExtendDTO.class);
+        }
+        return new Page<>();
+    }
+
+    @Override
+    public void orgAddProjectMember(ProjectAddMemberRequest request, String createUser) {
+        addProjectUser(request, createUser, ADD_MEMBER, OperationLogType.ADD.name(), Translator.get("add"), OperationLogModule.SETTING_ORGANIZATION_PROJECT);
+    }
+
+    @Override
+    public void addMemberByProject(ProjectAddMemberRequest request, String createUser) {
+        addProjectUser(request, createUser, ADD_MEMBER, OperationLogType.ADD.name(), Translator.get("add"), OperationLogModule.SETTING_SYSTEM_ORGANIZATION);
+    }
+
+    private void addProjectUser(ProjectAddMemberRequest request, String createUser, String path, String type, String content, String module) {
+        List<LogDTO> logDTOList = new ArrayList<>();
+        List<UserRoleRelation> userRoleRelations = new ArrayList<>();
+        SystemProject project = mapper.selectOneById(request.getProjectId());
+        Map<String, String> userMap = addUserPre(request.getUserIds(), createUser, path, module, request.getProjectId(), project);
+        request.getUserIds().forEach(userId -> {
+            request.getUserRoleIds().forEach(userRoleId -> {
+                UserRoleRelation userRoleRelation = new UserRoleRelation();
+                userRoleRelation.setUserId(userId);
+                userRoleRelation.setSourceId(request.getProjectId());
+                userRoleRelation.setRoleId(userRoleId);
+                userRoleRelation.setCreateUser(createUser);
+                userRoleRelation.setOrganizationId(project.getOrganizationId());
+                userRoleRelations.add(userRoleRelation);
+                String logProjectId = OperationLogConstants.SYSTEM;
+                if (Strings.CS.equals(module, OperationLogModule.SETTING_ORGANIZATION_PROJECT)) {
+                    logProjectId = OperationLogConstants.ORGANIZATION;
+                }
+                LogDTO logDTO = new LogDTO(logProjectId, OperationLogConstants.SYSTEM, userRoleRelation.getId(), createUser, type, module, content + Translator.get("project_member") + ": " + userMap.get(userId));
+                setLog(logDTO, path, HttpMethodConstants.POST.name(), logDTOList);
+            });
+        });
+        if (CollectionUtils.isNotEmpty(userRoleRelations)) {
+            userRoleRelationMapper.insertBatch(userRoleRelations);
+        }
+        operationLogService.batchAdd(logDTOList);
+    }
+
+    private void checkOrgIsExist(@NotBlank(message = "{organization.id.not_blank}") String organizationId) {
+        if (!QueryChain.of(SystemOrganization.class).where(SystemOrganization::getId).eq(organizationId).exists()) {
+            throw new CustomException(Translator.get("organization_not_exists"));
+        }
+    }
+
+    private List<UserExtendDTO> getMemberByOrg(String organizationId, String keyword) {
+        return QueryChain.of(UserRoleRelation.class)
+                .select(QueryMethods.distinct(SYSTEM_USER.ALL_COLUMNS))
+                .from(USER_ROLE_RELATION).join(SYSTEM_USER).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
+                .where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId))
+                .and(SYSTEM_USER.NAME.like(keyword).or(SYSTEM_USER.EMAIL.like(keyword)))
+                .orderBy(SYSTEM_USER.NAME.desc()).limit(1000)
+                .listAs(UserExtendDTO.class);
+    }
+
+    private List<UserRoleOptionDto> selectProjectUserRoleByUserIds(List<String> userIds, String projectId) {
+        return QueryChain.of(UserRoleRelation.class)
+                .select(QueryMethods.distinct(USER_ROLE_RELATION.ROLE_ID.as("id"), SYSTEM_USER_ROLE.NAME, USER_ROLE_RELATION.USER_ID))
+                .from(USER_ROLE_RELATION)
+                .leftJoin(SYSTEM_USER_ROLE).on(USER_ROLE_RELATION.ROLE_ID.eq(SYSTEM_USER_ROLE.ID))
+                .where(USER_ROLE_RELATION.USER_ID.in(userIds))
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(projectId)).listAs(UserRoleOptionDto.class);
     }
 
     private void checkOrg(String organizationId) {

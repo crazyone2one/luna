@@ -2,7 +2,10 @@ package cn.master.luna.controller;
 
 import cn.master.luna.constants.OperationLogType;
 import cn.master.luna.entity.SystemProject;
+import cn.master.luna.entity.dto.OptionDTO;
 import cn.master.luna.entity.dto.ProjectDTO;
+import cn.master.luna.entity.dto.UserExtendDTO;
+import cn.master.luna.entity.request.ProjectAddMemberRequest;
 import cn.master.luna.entity.request.ProjectSwitchRequest;
 import cn.master.luna.handler.ResultHandler;
 import cn.master.luna.handler.annotation.Log;
@@ -14,6 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -115,5 +119,25 @@ public class SystemProjectController {
     @Log(type = OperationLogType.UPDATE, expression = "#msClass.updateLog(#id)", msClass = OrganizationProjectLogService.class)
     public void disable(@PathVariable String id) {
         systemProjectService.disable(id, SessionUtils.getUserName());
+    }
+
+    @GetMapping("/member/get-member/option/{projectId}")
+    @Operation(summary = "项目管理-成员-获取成员下拉选项")
+    public List<UserExtendDTO> getMemberOption(@PathVariable String projectId,
+                                               @Schema(description = "查询关键字，根据邮箱和用户名查询")
+                                               @RequestParam(value = "keyword", required = false) String keyword) {
+        return systemProjectService.getMemberOption(projectId, keyword);
+    }
+
+    @GetMapping("/member/get-role/option/{projectId}")
+    @Operation(summary = "项目管理-成员-获取用户组下拉选项")
+    public List<OptionDTO> getRoleOption(@PathVariable String projectId) {
+        return systemProjectService.getRoleOption(projectId);
+    }
+
+    @PostMapping("/system/add-member")
+    @Operation(summary = "系统设置-系统-组织与项目-项目-添加成员")
+    public void addProjectMember(@Validated @RequestBody ProjectAddMemberRequest request) {
+        systemProjectService.addMemberByProject(request, SessionUtils.getUserName());
     }
 }

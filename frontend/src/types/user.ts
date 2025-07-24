@@ -30,6 +30,7 @@ export interface UserListItem {
     email: string;
     password: string;
     enable: boolean;
+    memberFlag?: boolean;
     createTime: number;
     updateTime: number;
     language: string; // 语言
@@ -62,4 +63,10 @@ export interface UserSelectorOption {
     email: string;
     disabled?: boolean;
     [key: string]: string | number | boolean | undefined;
+}
+export interface AddUserToOrgOrProjectParams {
+    userIds?: string[];
+    organizationId?: string;
+    projectId?: string;
+    userRoleIds?: string[];
 }

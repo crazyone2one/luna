@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {ref, useAttrs} from 'vue'
-import {type FormInst, type FormItemRule, type FormRules, NPopconfirm} from 'naive-ui'
+import {type ButtonProps, type FormInst, type FormItemRule, type FormRules, NPopconfirm} from 'naive-ui'
 import type {ConfirmValue} from '/@/components/BasePopover.vue'
 
 interface FieldConfig {
@@ -25,9 +25,10 @@ const props = withDefaults(
       allNames?: string[]; // 添加或者重命名名称重复
       isDelete?: boolean; // 当前使用是否是移除
       nodeId?: string; // 节点 id
+      cancelText?: string;
     }>(),
     {
-      removeText: '移除',
+      okText: '移除',
       disabled: false,
     }
 );
@@ -59,27 +60,32 @@ const handleNegativeClick = () => {
 }
 const handlePositiveClick = () => {
   if (!formRef.value) {
-    emits('confirm', { ...form.value, id: props.nodeId }, handleNegativeClick);
+    emits('confirm', {...form.value, id: props.nodeId}, handleNegativeClick);
     return;
   }
-  formRef.value?.validate(err=>{
+  formRef.value?.validate(err => {
     if (!err) {
-      emits('confirm', { ...form.value, id: props.nodeId }, handleNegativeClick);
+      emits('confirm', {...form.value, id: props.nodeId}, handleNegativeClick);
     }
   })
+}
+const buttonProps: ButtonProps = {
+  size: 'tiny'
 }
 </script>
 
 <template>
   <n-popconfirm trigger="click" v-bind="attrs"
                 :positive-text="props.okText || '确认'"
-                :negative-text="props.removeText || '取消'"
+                :negative-text="props.cancelText || '取消'"
+                :negative-button-props=buttonProps
+                :positive-button-props=buttonProps
                 @negative-click="handleNegativeClick"
                 @positive-click="handlePositiveClick"
   >
     <template #trigger>
       <slot>
-        <n-button type="tertiary" text :disabled="props.disabled">{{props.removeText}}</n-button>
+        <n-button type="error" size="tiny" :disabled="props.disabled">{{ props.removeText||'移除' }}</n-button>
       </slot>
     </template>
     <div class="flex flex-row flex-nowrap items-center">

@@ -6,8 +6,10 @@ import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.UserRoleRelation;
 import cn.master.luna.entity.dto.BasePageRequest;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.dto.UserTableResponse;
 import cn.master.luna.entity.request.AddUserRequest;
+import cn.master.luna.entity.request.MemberRequest;
 import cn.master.luna.exception.CustomException;
 import cn.master.luna.mapper.SystemUserMapper;
 import cn.master.luna.mapper.UserRoleRelationMapper;
@@ -15,6 +17,7 @@ import cn.master.luna.service.SystemUserService;
 import cn.master.luna.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static cn.master.luna.entity.table.SystemUserRoleTableDef.SYSTEM_USER_ROLE;
 import static cn.master.luna.entity.table.SystemUserTableDef.SYSTEM_USER;
+import static cn.master.luna.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
 
 /**
  * 用户 服务层实现。
@@ -94,6 +98,19 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             });
         }
         return user;
+    }
+
+    @Override
+    public Page<UserExtendDTO> getMemberList(MemberRequest request) {
+        return queryChain()
+                .select(QueryMethods.distinct(SYSTEM_USER.ALL_COLUMNS))
+                .select("count(urr.id) > 0 as memberFlag")
+                .from(SYSTEM_USER).as("u")
+                .leftJoin(USER_ROLE_RELATION).as("urr").on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID)
+                        .and(USER_ROLE_RELATION.SOURCE_ID.eq(request.getSourceId())))
+                .where(SYSTEM_USER.NAME.like(request.getKeyword()).or(SYSTEM_USER.EMAIL.like(request.getKeyword())))
+                .groupBy(SYSTEM_USER.ID)
+                .pageAs(new Page<>(request.getPage(), request.getPageSize()), UserExtendDTO.class);
     }
 
     private void validateUserInfo(String email) {

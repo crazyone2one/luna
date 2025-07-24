@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, h, onMounted, ref, useTemplateRef} from 'vue'
+import {computed, h, onMounted, reactive, ref, useTemplateRef} from 'vue'
 import {type DataTableColumns, type DataTableRowKey, NButton, NSpace, NSwitch} from 'naive-ui'
 import type {CreateOrUpdateSystemProjectParams, IProjectItem} from '/@/types/project.ts'
 import {usePagination} from 'alova/client'
@@ -9,11 +9,12 @@ import {enableOrDisableProjectByOrg, fetchOrgProjectPage} from '/@/api/system/or
 import {useAppStore} from '/@/store'
 import AddProjectModal from '/@/views/setting/organization/project/AddProjectModal.vue'
 import {hasAnyPermission} from '/@/utils/permission.ts'
+import UserDrawer from '/@/views/setting/organization/project/UserDrawer.vue'
 
 const addProjectModalRef = useTemplateRef<InstanceType<typeof AddProjectModal>>('addProjectModal')
+const userDrawerRef = useTemplateRef<InstanceType<typeof UserDrawer>>('userDrawer')
 const appStore = useAppStore();
 const keyword = ref('');
-const currentProjectId = ref('');
 const addProjectVisible = ref(false);
 const currentUpdateProject = ref<CreateOrUpdateSystemProjectParams>();
 const currentOrgId = computed(() => appStore.currentOrgId);
@@ -71,11 +72,17 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
         if (row.enable) {
           return h(NSpace, {}, {
             default: () => {
-              return [
-                h(NButton, {size: 'tiny', type: 'warning'}, {default: () => '编辑'}),
-                h(NButton, {size: 'tiny', type: 'info', disabled: true}, {default: () => '添加成员'}),
-                h(NButton, {size: 'tiny', type: 'tertiary', disabled: true}, {default: () => '进入项目'}),
-              ]
+              const res = []
+              if (hasAnyPermission(['ORGANIZATION_PROJECT:READ+UPDATE'])) {
+                res.push(h(NButton, {size: 'tiny', type: 'warning'}, {default: () => '编辑'}),)
+              }
+              if (hasAnyPermission(['ORGANIZATION_PROJECT:READ+ADD_MEMBER'])) {
+                res.push(h(NButton, {size: 'tiny', type: 'info', disabled: true}, {default: () => '添加成员'}),)
+              }
+              if (hasAnyPermission(['PROJECT_BASE_INFO:READ'])) {
+                res.push(h(NButton, {size: 'tiny', type: 'tertiary', disabled: true}, {default: () => '进入项目'}),)
+              }
+              return res
             }
           })
         } else {
@@ -85,9 +92,15 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
     }
   ]
 })
+const currentUserDrawer = reactive({
+  visible: false,
+  projectId: '',
+  currentName: '',
+});
 const showUserDrawer = (record: IProjectItem) => {
-  currentProjectId.value = record.id;
-  console.log(record)
+  currentUserDrawer.visible = true;
+  currentUserDrawer.projectId = record.id;
+  currentUserDrawer.currentName = record.name;
 }
 
 /**
@@ -136,6 +149,10 @@ const handleAddProjectModalCancel = (shouldSearch: boolean) => {
     loadList();
   }
 };
+const handleUserDrawerCancel = () => {
+  currentUserDrawer.visible = false;
+  currentUserDrawer.projectId = '';
+}
 onMounted(() => {
   loadList()
 })
@@ -160,6 +177,11 @@ onMounted(() => {
   <add-project-modal ref="addProjectModalRef" v-model:show-modal="addProjectVisible"
                      :current-project="currentUpdateProject"
                      @cancel="handleAddProjectModalCancel"/>
+  <user-drawer ref="userDrawerRef"
+               v-bind="currentUserDrawer"
+               :organization-id="currentOrgId"
+               @cancel="handleUserDrawerCancel"
+               @request-fetch-data="loadList"/>
 </template>
 
 <style scoped>

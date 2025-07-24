@@ -26,3 +26,8 @@ export interface ITableQueryParams {
     // 查询条件
     keyword?: string;
 }
+export interface ISelectOption {
+    id: string;
+    name: string;
+    disabled?: boolean;
+}

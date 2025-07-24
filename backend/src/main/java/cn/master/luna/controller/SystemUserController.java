@@ -3,9 +3,11 @@ package cn.master.luna.controller;
 import cn.master.luna.constants.Created;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.dto.BasePageRequest;
+import cn.master.luna.entity.dto.UserExtendDTO;
 import cn.master.luna.entity.dto.UserSelectOption;
 import cn.master.luna.entity.dto.UserTableResponse;
 import cn.master.luna.entity.request.AddUserRequest;
+import cn.master.luna.entity.request.MemberRequest;
 import cn.master.luna.service.SystemUserRoleService;
 import cn.master.luna.service.SystemUserService;
 import com.mybatisflex.core.paginate.Page;
@@ -103,9 +105,16 @@ public class SystemUserController {
     public Page<UserTableResponse> page(@Validated @RequestBody BasePageRequest request) {
         return systemUserService.getUserPage(request);
     }
+
     @GetMapping("/get/global/system/role")
     @Operation(summary = "系统设置-系统-用户-查找系统级用户组")
     public List<UserSelectOption> getGlobalSystemRole() {
         return systemUserRoleService.getGlobalSystemRoleList();
+    }
+
+    @PostMapping("/organization/member-list")
+    @Operation(summary = "系统设置-系统-组织与项目-获取添加成员列表")
+    public Page<UserExtendDTO> getMemberOptionList(@Validated @RequestBody MemberRequest request) {
+        return systemUserService.getMemberList(request);
     }
 }

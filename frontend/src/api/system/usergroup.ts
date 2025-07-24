@@ -5,7 +5,7 @@ import type {
     UserGroupAuthSetting,
     UserGroupItem
 } from '/@/types/user-group.ts'
-import type {ICommonPage, ITableQueryParams} from '/@/types/common.ts'
+import type {ICommonPage, ISelectOption, ITableQueryParams} from '/@/types/common.ts'
 import type {UserListItem} from '/@/types/user.ts'
 import type {IUserSelectorOption} from '/@/components/base-user-selector/types.ts'
 
@@ -122,4 +122,8 @@ export const updateOrAddOrgUserGroup = (data: OrgUserGroupParams) => {
  */
 export const updateOrAddProjectUserGroup = (data: SystemUserGroupParams) => {
     return alovaInstance.Post<UserGroupItem>(data.id ? '/user/role/project/update' : `/user/role/project/add`, data)
+}
+
+export const getGlobalUserGroup = (organizationId: string) => {
+    return alovaInstance.Get<Array<ISelectOption>>(`/organization/user/role/list/${organizationId}`)
 }

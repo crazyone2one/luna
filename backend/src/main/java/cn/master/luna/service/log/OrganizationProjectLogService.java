@@ -51,4 +51,22 @@ public class OrganizationProjectLogService {
         }
         return null;
     }
+
+    public LogDTO deleteLog(String id) {
+        SystemProject project = projectMapper.selectOneById(id);
+        if (project != null) {
+            LogDTO dto = new LogDTO(
+                    OperationLogConstants.ORGANIZATION,
+                    project.getOrganizationId(),
+                    id,
+                    null,
+                    OperationLogType.DELETE.name(),
+                    OperationLogModule.SETTING_ORGANIZATION_PROJECT,
+                    project.getName());
+
+            dto.setOriginalValue(JacksonUtils.toJSONBytes(project));
+            return dto;
+        }
+        return null;
+    }
 }

@@ -1,12 +1,16 @@
 package cn.master.luna.controller;
 
+import cn.master.luna.constants.OperationLogType;
 import cn.master.luna.entity.SystemOrganization;
 import cn.master.luna.entity.dto.OptionDTO;
 import cn.master.luna.entity.dto.ProjectDTO;
 import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.request.OrganizationProjectRequest;
+import cn.master.luna.entity.request.*;
+import cn.master.luna.handler.annotation.Log;
 import cn.master.luna.service.SystemOrganizationService;
 import cn.master.luna.service.SystemProjectService;
+import cn.master.luna.service.log.OrganizationProjectLogService;
+import cn.master.luna.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -127,5 +131,44 @@ public class SystemOrganizationController {
     public List<UserExtendDTO> getUserAdminList(@PathVariable String organizationId, @Schema(description = "查询关键字，根据邮箱和用户名查询")
     @RequestParam(value = "keyword", required = false) String keyword) {
         return systemProjectService.getUserAdminList(organizationId, keyword);
+    }
+
+    @PostMapping("/project/member-list")
+    @Operation(summary = "系统设置-组织-项目-成员列表")
+    public Page<UserExtendDTO> getProjectMember(@Validated @RequestBody ProjectMemberRequest request) {
+        return systemProjectService.getProjectMember(request);
+    }
+
+    @GetMapping("/project/remove-member/{projectId}/{userId}")
+    @Operation(summary = "系统设置-组织-项目-移除成员")
+    @Parameter(name = "userId", description = "用户id", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    @Parameter(name = "projectId", description = "项目id", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    @Log(type = OperationLogType.DELETE, expression = "#msClass.deleteLog(#projectId)", msClass = OrganizationProjectLogService.class)
+    public int removeProjectMember(@PathVariable String projectId, @PathVariable String userId) {
+        return systemProjectService.removeProjectMember(projectId, userId, SessionUtils.getUserName());
+    }
+
+    @PostMapping("/project/user-list")
+    @Operation(summary = "系统设置-组织-项目-分页获取成员列表")
+    public Page<UserExtendDTO> getMemberList(@Validated @RequestBody ProjectUserRequest request) {
+        return systemProjectService.getMemberList(request);
+    }
+
+    @GetMapping("/user/role/list/{organizationId}")
+    @Operation(summary = "系统设置-组织-成员-获取当前组织下的所有自定义用户组以及组织级别的用户组")
+    public List<OptionDTO> getUserRoleList(@PathVariable(value = "organizationId") String organizationId) {
+        return systemOrganizationService.getUserRoleList(organizationId);
+    }
+
+    @PostMapping("/project/add-members")
+    @Operation(summary = "系统设置-组织-项目-添加成员")
+    public void addProjectMember(@Validated @RequestBody ProjectAddMemberRequest request) {
+        systemProjectService.orgAddProjectMember(request, SessionUtils.getUserName());
+    }
+
+    @PostMapping("/system/add-members")
+    @Operation(summary = "系统设置-系统-组织与项目-组织-添加组织成员")
+    public void addMember(@Validated @RequestBody OrganizationMemberRequest request) {
+        systemOrganizationService.addMemberBySystem(request, SessionUtils.getUserName());
     }
 }

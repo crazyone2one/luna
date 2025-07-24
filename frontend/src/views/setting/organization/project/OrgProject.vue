@@ -10,12 +10,15 @@ import {useAppStore} from '/@/store'
 import AddProjectModal from '/@/views/setting/organization/project/AddProjectModal.vue'
 import {hasAnyPermission} from '/@/utils/permission.ts'
 import UserDrawer from '/@/views/setting/organization/project/UserDrawer.vue'
+import AddUserModal from '/@/views/setting/organization/components/AddUserModal.vue'
 
 const addProjectModalRef = useTemplateRef<InstanceType<typeof AddProjectModal>>('addProjectModal')
 const userDrawerRef = useTemplateRef<InstanceType<typeof UserDrawer>>('userDrawer')
 const appStore = useAppStore();
 const keyword = ref('');
 const addProjectVisible = ref(false);
+const currentProjectId = ref('');
+const userVisible = ref(false);
 const currentUpdateProject = ref<CreateOrUpdateSystemProjectParams>();
 const currentOrgId = computed(() => appStore.currentOrgId);
 const checkedRowKeys = ref<DataTableRowKey[]>([])
@@ -77,7 +80,7 @@ const columns = computed<DataTableColumns<IProjectItem>>(() => {
                 res.push(h(NButton, {size: 'tiny', type: 'warning'}, {default: () => '编辑'}),)
               }
               if (hasAnyPermission(['ORGANIZATION_PROJECT:READ+ADD_MEMBER'])) {
-                res.push(h(NButton, {size: 'tiny', type: 'info', disabled: true}, {default: () => '添加成员'}),)
+                res.push(h(NButton, {size: 'tiny', type: 'info', onClick:()=>showAddUserModal(row)}, {default: () => '添加成员'}),)
               }
               if (hasAnyPermission(['PROJECT_BASE_INFO:READ'])) {
                 res.push(h(NButton, {size: 'tiny', type: 'tertiary', disabled: true}, {default: () => '进入项目'}),)
@@ -102,7 +105,10 @@ const showUserDrawer = (record: IProjectItem) => {
   currentUserDrawer.projectId = record.id;
   currentUserDrawer.currentName = record.name;
 }
-
+const showAddUserModal = (record:IProjectItem) => {
+  currentProjectId.value = record.id;
+  userVisible.value = true;
+}
 /**
  * 切换项目状态
  * @param isEnable
@@ -182,6 +188,11 @@ onMounted(() => {
                :organization-id="currentOrgId"
                @cancel="handleUserDrawerCancel"
                @request-fetch-data="loadList"/>
+  <add-user-modal v-model:visible="userVisible"
+                  is-organization
+                  :project-id="currentProjectId"
+                  :organization-id="currentOrgId"
+                  @submit="loadList"/>
 </template>
 
 <style scoped>

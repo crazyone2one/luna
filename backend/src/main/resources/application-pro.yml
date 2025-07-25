@@ -1,6 +1,9 @@
 server:
   port: 8086
 spring:
+  messages:
+    basename: i18n/commons,i18n/api,i18n/bug,i18n/case,i18n/plan,i18n/project,i18n/system,i18n/dashboard
+    default-locale: zh_CN
   data:
     redis:
       host: 172.16.2.15

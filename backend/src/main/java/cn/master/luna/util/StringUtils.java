@@ -29,4 +29,8 @@ public class StringUtils {
 
         return builder.toString();
     }
+
+    public static <T extends Enum<T>> T getRandomEnum(Class<T> clazz) {
+        return clazz.getEnumConstants()[random.nextInt(clazz.getEnumConstants().length)];
+    }
 }

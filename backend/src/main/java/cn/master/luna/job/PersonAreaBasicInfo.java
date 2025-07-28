@@ -38,9 +38,11 @@ public class PersonAreaBasicInfo extends BaseScheduleJob {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String projectId = jobDataMap.getString("projectId");
         Object config = jobDataMap.getWrappedMap().get("config");
-        String areaType = Objects.requireNonNull(JacksonUtils.toJSONObject(config, new TypeReference<Map<String, String>>() {
-                }))
-                .get("areaType");
+        String areaType = "20";
+        Map<String, String> jsonObject = JacksonUtils.toJSONObject(config, new TypeReference<>() {});
+        if (Objects.nonNull(jsonObject)) {
+            areaType = jsonObject.get("areaType");
+        }
         SystemProject systemProject = QueryChain.of(SystemProject.class).where(SystemProject::getId).eq(projectId).one();
         LocalDateTime now = LocalDateTime.now();
         String fileName = systemProject.getNum() + "_NRYQY_" + DateUtils.localDateTime2String(now) + ".txt";
@@ -77,7 +79,7 @@ public class PersonAreaBasicInfo extends BaseScheduleJob {
         }
         if (!content.isEmpty()) {
             content.append("]]]");
-            FileUtils.genFile("/app/ftp/aqjk/" + fileName, header + content, "[NRYQY]人员区域基本信息");
+            FileUtils.genFile("/app/ftp/rydw/" + fileName, header + content, "[NRYQY]人员区域基本信息");
         }
     }
 

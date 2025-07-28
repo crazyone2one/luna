@@ -8,10 +8,12 @@ const type = defineModel<string>('modelValue', {
 });
 const options = [
   {label: '环境瓦斯', value: '0001'},
-  {label: '风速', value: '0002', disabled: true},
-  {label: '环境温度', value: '0003', disabled: true},
+  {label: '环境温度', value: '0003'},
   {label: '一氧化碳', value: '0004'},
   {label: '风压', value: '0005', disabled: true},
+  {label: '粉尘', value: '0012'},
+  {label: '风筒状态', value: '1003'},
+  {label: '辅助通风机', value: '1008'},
 ]
 const emit = defineEmits<{
   (

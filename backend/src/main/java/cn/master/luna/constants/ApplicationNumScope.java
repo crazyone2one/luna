@@ -25,5 +25,6 @@ public enum ApplicationNumScope {
     REVIEW_CASE_MANAGEMENT,
     TASK,
     // 分站
-    NFZDY
+    NFZDY,
+    NJXRY
 }

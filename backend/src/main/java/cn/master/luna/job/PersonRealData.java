@@ -31,7 +31,9 @@ public class PersonRealData extends BaseScheduleJob {
     public static TriggerKey getTriggerKey(String resourceId) {
         return new TriggerKey(resourceId, PersonRealData.class.getName());
     }
+
     private final Random random = new Random();
+
     @Override
     protected void businessExecute(JobExecutionContext context) {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
@@ -43,13 +45,18 @@ public class PersonRealData extends BaseScheduleJob {
         String fileName = systemProject.getNum() + "_NRYSS_" + DateUtils.localDateTime2String(now) + ".txt";
         String header = systemProject.getNum() + ";" + systemProject.getName() + ";" + DateUtils.localDateTime2StringStyle2(now) + "^";
         List<Row> rowList = getSubstationByAreaType(areaType);
+        List<Row> personList = getPersonList();
         if (CollectionUtils.isNotEmpty(rowList)) {
             Row row = rowList.get(random.nextInt(rowList.size()));
-            content.append("901155;高红伟;1;").append(DateUtils.localDateTime2StringStyle2(now)).append(";;")
-                    .append(areaType).append(";").append(DateUtils.localDateTime2StringStyle2(now)).append(";")
-                    .append(row.getString("station_code")).append(";")
-                    .append(DateUtils.localDateTime2StringStyle2(now))
-                    .append(";1;1;200;1;19626981.17;3933930.97;930.97;1;1;0;;^");
+            personList.forEach(person -> {
+                content.append(person.getString("person_code")).append(";")
+                        .append(person.getString("person_name")).append(";")
+                        .append("1;").append(DateUtils.localDateTime2StringStyle2(now.minusHours(5))).append(";;")
+                        .append(areaType).append(";").append(DateUtils.localDateTime2StringStyle2(now)).append(";")
+                        .append(row.getString("station_code")).append(";")
+                        .append(DateUtils.localDateTime2StringStyle2(now))
+                        .append(";1;1;200;1;19626981.17;3933930.97;930.97;1;1;0;;^");
+            });
         }
 
         if (!content.isEmpty()) {
@@ -57,6 +64,7 @@ public class PersonRealData extends BaseScheduleJob {
             FileUtils.genFile("/app/ftp/rydw/" + fileName, header + content, "[NRYSS]人员实时数据");
         }
     }
+
     private List<Row> getSubstationByAreaType(String areaType) {
         try {
             DataSourceKey.use("ds2");
@@ -64,6 +72,17 @@ public class PersonRealData extends BaseScheduleJob {
             map.put("area_type", areaType);
             map.put("is_delete", "0");
             return Db.selectListByMap("sf_jxzy_substation", map);
+        } finally {
+            DataSourceKey.clear();
+        }
+    }
+
+    private List<Row> getPersonList() {
+        try {
+            DataSourceKey.use("ds2");
+            Map<String, Object> map = new HashMap<>();
+            map.put("is_delete", "0");
+            return Db.selectListByMap("sf_jxzy_person_new", map);
         } finally {
             DataSourceKey.clear();
         }

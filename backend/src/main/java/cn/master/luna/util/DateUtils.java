@@ -63,8 +63,7 @@ public class DateUtils {
         LocalTime endTime = LocalTime.of(endHour, endMinute);
 
         // 比较当前时间是否在 [startTime, endTime) 范围内
-        return nowTime.isAfter(startTime) || nowTime.equals(startTime)
-                && nowTime.isBefore(endTime);
+        return (nowTime.isAfter(startTime) || nowTime.equals(startTime)) && nowTime.isBefore(endTime);
     }
 
     /***
@@ -83,12 +82,10 @@ public class DateUtils {
         // 跨天情况：开始时间 > 结束时间（如 22:00 到 06:00）
         if (startTime.isAfter(endTime)) {
             // 当前时间 >= 开始时间 或 当前时间 < 结束时间
-            return nowTime.isAfter(startTime) || nowTime.equals(startTime)
-                    || nowTime.isBefore(endTime);
+            return (nowTime.isAfter(startTime) || nowTime.equals(startTime)) || nowTime.isBefore(endTime);
         } else {
             // 非跨天情况，正常判断
-            return nowTime.isAfter(startTime) || nowTime.equals(startTime)
-                    && nowTime.isBefore(endTime);
+            return (nowTime.isAfter(startTime) || nowTime.equals(startTime)) && nowTime.isBefore(endTime);
         }
     }
 }

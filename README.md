@@ -1,1 +1,5 @@
-<p align="center"><img src="https://metersphere.oss-cn-hangzhou.aliyuncs.com/img/MeterSphere-%E7%B4%AB%E8%89%B2.png" alt="MeterSphere" width="300" /></a></p>
+~~~
+cd /home/app/luna
+docker build -t luna:1.0 .
+docker run -d -p 18086:8086 --name luna -v /home/app/ftp:/app/ftp luna:1.0
+~~~

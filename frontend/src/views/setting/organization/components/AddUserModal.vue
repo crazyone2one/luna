@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import BaseModal from '/@/components/BaseModal.vue'
-import {computed, ref, watch} from 'vue'
+import {ref, watch} from 'vue'
 import type {ISelectOption} from '/@/types/common.ts'
 import type {UserListItem} from '/@/types/user.ts'
 import type {DataTableColumns} from 'naive-ui'
@@ -31,26 +31,22 @@ const emit = defineEmits<{
 const keyword = ref<string>('');
 const currentUserGroupOptions = ref<ISelectOption[]>([])
 const checkedRowKeys = ref<string[]>([])
-const columns = computed<DataTableColumns<UserListItem>>(() => {
-  return [
-    {
-      type: 'selection',
-      disabled(row: UserListItem) {
-        return row.memberFlag
-      }
-    },
-    {
-      title: '姓名',
-      key: 'name',
-      width: 200,
-    },
-    {
-      title: '邮箱',
-      key: 'email',
-      width: 250,
-    },
-  ]
-})
+const columns: DataTableColumns<UserListItem> = [
+  {
+    type: 'selection',
+    disabled: (row: UserListItem) => row.memberFlag as boolean
+  },
+  {
+    title: '姓名',
+    key: 'name',
+    width: 200,
+  },
+  {
+    title: '邮箱',
+    key: 'email',
+    width: 250,
+  },
+]
 const handleCheck = (rowKeys: string[]) => {
   checkedRowKeys.value = rowKeys
 }

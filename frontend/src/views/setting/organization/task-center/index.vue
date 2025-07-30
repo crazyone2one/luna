@@ -128,7 +128,7 @@ const columns: DataTableColumns<ITaskCenterTaskItem> = [
             },
             {default: () => '删除'}),)
       }
-      if (row.job === 'cn.master.luna.job.SensorBasicInfo') {
+      if (row.runOnce) {
         actions.push(h(NButton, {
               type: 'info', size: 'tiny', class: '!mr-0',
               onClick: () => {
@@ -179,8 +179,10 @@ const deleteTask = (record: ITaskCenterTaskItem) => {
   })
 }
 const handleRunTask = (record: ITaskCenterTaskItem) => {
-  showRunTaskModel.value = true
-  currentTask.value = record
+  if (record.job==='cn.master.luna.job.SensorBasicInfo'){
+    showRunTaskModel.value = true
+    currentTask.value = record
+  }
 }
 onMounted(() => {
   loadList()

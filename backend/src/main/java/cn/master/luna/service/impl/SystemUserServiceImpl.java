@@ -5,9 +5,7 @@ import cn.master.luna.entity.SystemOrganization;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.UserRoleRelation;
-import cn.master.luna.entity.dto.BasePageRequest;
-import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.dto.UserTableResponse;
+import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
 import cn.master.luna.exception.CustomException;
@@ -15,14 +13,18 @@ import cn.master.luna.mapper.SystemUserMapper;
 import cn.master.luna.mapper.UserRoleRelationMapper;
 import cn.master.luna.service.SystemUserService;
 import cn.master.luna.util.SessionUtils;
+import cn.master.luna.util.Translator;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryMethods;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,7 +86,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         user.setSource("LOCAL");
         user.setCreateUser(SessionUtils.getCurrentUserId());
         user.setUpdateUser(SessionUtils.getCurrentUserId());
-        user.setPassword(passwordEncoder.encode("123456"));
+        user.setPassword(passwordEncoder.encode(request.getEmail()));
         mapper.insert(user);
         if (!request.getUserRoleIdList().isEmpty()) {
             request.getUserRoleIdList().forEach(userRoleId -> {
@@ -111,6 +113,85 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                 .where(SYSTEM_USER.NAME.like(request.getKeyword()).or(SYSTEM_USER.EMAIL.like(request.getKeyword())))
                 .groupBy(SYSTEM_USER.ID)
                 .pageAs(new Page<>(request.getPage(), request.getPageSize()), UserExtendDTO.class);
+    }
+
+    @Override
+    public List<String> getBatchUserIds(TableBatchProcessDTO request) {
+        if (request.isSelectAll()) {
+            List<String> userIdList = queryChain().select(SYSTEM_USER.ID).from(SYSTEM_USER)
+                    .where(SYSTEM_USER.ID.eq(request.getCondition().getKeyword())
+                            .or(SYSTEM_USER.NAME.like(request.getCondition().getKeyword())
+                                    .or(SYSTEM_USER.EMAIL.like(request.getCondition().getKeyword()))
+                                    .or(SYSTEM_USER.PHONE.like(request.getCondition().getKeyword()))))
+                    .listAs(String.class);
+            if (CollectionUtils.isNotEmpty(request.getExcludeIds())) {
+                userIdList.removeAll(request.getExcludeIds());
+            }
+            return userIdList;
+        } else {
+            return request.getSelectIds();
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String userName) {
+        request.setSelectIds(getBatchUserIds(request));
+        checkUserInDb(request.getSelectIds());
+        List<SystemUser> users = mapper.selectListByIds(request.getSelectIds());
+        users.forEach(user -> {
+            SystemUser newUser = new SystemUser();
+            newUser.setId(user.getId());
+            if (user.getName().equals("admin")) {
+                newUser.setPassword(passwordEncoder.encode("Password@"));
+            } else {
+                newUser.setPassword(passwordEncoder.encode(user.getEmail()));
+            }
+            newUser.setUpdateUser(userName);
+            mapper.update(newUser);
+        });
+        TableBatchProcessResponse response = new TableBatchProcessResponse();
+        response.setTotalCount(request.getSelectIds().size());
+        response.setSuccessCount(request.getSelectIds().size());
+        return response;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName) {
+        List<String> userIdList = getBatchUserIds(request);
+        checkUserInDb(userIdList);
+        //检查是否含有Admin
+        checkProcessUserAndThrowException(userIdList, operatorId, operatorName, Translator.get("user.not.delete"));
+        TableBatchProcessResponse response = new TableBatchProcessResponse();
+        response.setTotalCount(userIdList.size());
+        response.setSuccessCount(mapper.deleteBatchByIds(userIdList));
+        //删除用户角色关系
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.where(USER_ROLE_RELATION.USER_ID.in(userIdList));
+        userRoleRelationMapper.deleteByQuery(queryWrapper);
+        return response;
+    }
+
+    private void checkProcessUserAndThrowException(List<String> userIdList, String operatorId, String operatorName, String exceptionMessage) {
+        for (String userId : userIdList) {
+            //当前用户或admin不能被操作
+            if (Strings.CS.equals(userId, operatorId)) {
+                throw new CustomException(exceptionMessage + ":" + operatorName);
+            } else if (Strings.CS.equals(userId, "71026562839000138")) {
+                throw new CustomException(exceptionMessage + ": 71026562839000138");
+            }
+        }
+    }
+
+    private void checkUserInDb(@Valid List<String> userIdList) {
+        if (CollectionUtils.isEmpty(userIdList)) {
+            throw new CustomException(Translator.get("user.not.exist"));
+        }
+        List<SystemUser> users = mapper.selectListByIds(userIdList);
+        if (userIdList.size() != users.size()) {
+            throw new CustomException(Translator.get("user.not.exist"));
+        }
     }
 
     private void validateUserInfo(String email) {

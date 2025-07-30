@@ -31,6 +31,7 @@ export interface UserListItem {
     password: string;
     enable: boolean;
     memberFlag?: boolean;
+    selectUserGroupVisible?:boolean,
     createTime: number;
     updateTime: number;
     language: string; // 语言
@@ -69,4 +70,19 @@ export interface AddUserToOrgOrProjectParams {
     organizationId?: string;
     projectId?: string;
     userRoleIds?: string[];
+}
+// 创建用户模型
+export interface ISimpleUserInfo {
+    id?: string;
+    name: string;
+    email: string;
+    phone?: string;
+}
+export interface UpdateUserInfoParams extends ISimpleUserInfo {
+    id: string;
+    userRoleIdList: string[];
+}
+
+export interface CreateUserParams extends ISimpleUserInfo {
+    userRoleIdList: string[];
 }

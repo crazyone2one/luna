@@ -1,15 +1,16 @@
 package cn.master.luna.controller;
 
 import cn.master.luna.constants.Created;
+import cn.master.luna.constants.OperationLogType;
 import cn.master.luna.entity.SystemUser;
-import cn.master.luna.entity.dto.BasePageRequest;
-import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.dto.UserSelectOption;
-import cn.master.luna.entity.dto.UserTableResponse;
+import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
+import cn.master.luna.handler.annotation.Log;
 import cn.master.luna.service.SystemUserRoleService;
 import cn.master.luna.service.SystemUserService;
+import cn.master.luna.service.log.UserLogService;
+import cn.master.luna.util.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,16 +48,11 @@ public class SystemUserController {
         return systemUserService.addUser(request);
     }
 
-    /**
-     * 根据主键删除用户。
-     *
-     * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
-     */
-    @DeleteMapping("remove/{id}")
-    @Operation(description = "根据主键用户")
-    public boolean remove(@PathVariable @Parameter(description = "用户主键") String id) {
-        return systemUserService.removeById(id);
+    @PostMapping("/delete")
+    @Operation(summary = "系统设置-系统-用户-删除用户")
+    @Log(type = OperationLogType.DELETE, expression = "#msClass.deleteLog(#request)", msClass = UserLogService.class)
+    public TableBatchProcessResponse remove(@Validated @RequestBody TableBatchProcessDTO request) {
+        return systemUserService.deleteUser(request, SessionUtils.getCurrentUserId(), SessionUtils.getUserName());
     }
 
     /**
@@ -116,5 +112,12 @@ public class SystemUserController {
     @Operation(summary = "系统设置-系统-组织与项目-获取添加成员列表")
     public Page<UserExtendDTO> getMemberOptionList(@Validated @RequestBody MemberRequest request) {
         return systemUserService.getMemberList(request);
+    }
+
+    @PostMapping("/reset/password")
+    @Operation(summary = "系统设置-系统-用户-重置用户密码")
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.resetPasswordLog(#request)", msClass = UserLogService.class)
+    public TableBatchProcessResponse resetPassword(@Validated @RequestBody TableBatchProcessDTO request) {
+        return systemUserService.resetPassword(request, SessionUtils.getUserName());
     }
 }

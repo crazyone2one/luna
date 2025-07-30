@@ -31,3 +31,12 @@ export interface ISelectOption {
     name: string;
     disabled?: boolean;
 }
+export interface BatchActionQueryParams {
+    excludeIds?: string[]; // 排除的id
+    selectedIds?: string[];
+    selectAll: boolean; // 是否跨页全选
+    params?: ITableQueryParams; // 查询参数
+    currentSelectCount?: number; // 当前选中的数量
+    condition?: any; // 查询条件
+    [key: string]: any;
+}

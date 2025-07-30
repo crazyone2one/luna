@@ -1,13 +1,13 @@
 package cn.master.luna.service;
 
 import cn.master.luna.entity.SystemUser;
-import cn.master.luna.entity.dto.BasePageRequest;
-import cn.master.luna.entity.dto.UserExtendDTO;
-import cn.master.luna.entity.dto.UserTableResponse;
+import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
+
+import java.util.List;
 
 /**
  * 用户 服务层。
@@ -22,4 +22,10 @@ public interface SystemUserService extends IService<SystemUser> {
     SystemUser addUser(AddUserRequest request);
 
     Page<UserExtendDTO> getMemberList(MemberRequest request);
+
+    List<String> getBatchUserIds(TableBatchProcessDTO request);
+
+    TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String userName);
+
+    TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName);
 }

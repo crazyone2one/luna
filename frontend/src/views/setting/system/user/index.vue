@@ -1,17 +1,38 @@
 <script setup lang="ts">
 
 import BaseCard from '/@/components/BaseCard.vue'
-import {computed, h, onMounted, ref, useTemplateRef} from 'vue'
-import {type DataTableColumns, type DataTableRowKey, NButton, NSwitch} from 'naive-ui'
-import type {UserListItem} from '/@/types/user.ts'
+import {computed, h, onBeforeMount, ref, useTemplateRef} from 'vue'
+import {type DataTableColumns, type DataTableRowKey, type DropdownOption, NButton, NSelect, NSwitch} from 'naive-ui'
+import type {SystemRole, UpdateUserInfoParams, UserListItem} from '/@/types/user.ts'
 import {usePagination} from 'alova/client'
-import {fetchUserPage} from '/@/api/system/user.ts'
+import {deleteUserInfo, fetchUserPage, getSystemRoles, resetUserPassword} from '/@/api/system/user.ts'
 import EditUser from '/@/views/setting/system/user/components/EditUser.vue'
 import BaseTagGroup from '/@/components/BaseTagGroup.vue'
+import {hasAnyPermission} from '/@/utils/permission.ts'
+import BaseMoreAction from '/@/components/BaseMoreAction.vue'
+import type {BatchActionQueryParams} from '/@/types/common.ts'
 
 type UserModalMode = 'create' | 'edit';
 const editUserRef = useTemplateRef<InstanceType<typeof EditUser>>('editUser')
 const checkedRowKeys = ref<DataTableRowKey[]>([])
+const hasOperationSysUserPermission = computed(() =>
+    hasAnyPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER:READ+DELETE'])
+);
+const userGroupOptions = ref<SystemRole[]>([]);
+const options = [
+  {
+    label: '重置密码',
+    key: 'resetPassword'
+  },
+  {
+    type: 'divider',
+    key: 'd1'
+  },
+  {
+    label: '删除',
+    key: 'delete'
+  },
+]
 const columns = computed<DataTableColumns<UserListItem>>(() => {
   return [
     {
@@ -33,41 +54,135 @@ const columns = computed<DataTableColumns<UserListItem>>(() => {
     {
       title: '组织',
       key: 'organizationList',
-      width: 300
+      width: 300,
+      render(row) {
+        return h(BaseTagGroup, {type: 'primary', tagList: row.organizationList}, {})
+      }
     },
     {
       title: '用户组',
       key: 'userRoleList',
       width: 300,
       render(row) {
-        return h(BaseTagGroup, {type: 'primary', tagList: row.userRoleList}, {})
+        if (!row.selectUserGroupVisible) {
+          return h(BaseTagGroup, {
+            type: 'primary', tagList: row.userRoleList
+          }, {})
+        } else {
+          return h(NSelect, {
+            value: tmpUserRoleIdList.value,
+            placeholder: '请选择用户组',
+            options: userGroupOptions.value,
+            labelField: 'name',
+            valueField: 'id',
+            class: 'w-full max-w-[300px]', clearable: true, multiple: true
+          }, {})
+        }
       }
     },
     {
       title: '状态',
       key: 'enable',
       render(row) {
-        return h(NSwitch, {value: row.enable}, {})
+        return h(NSwitch, {value: row.enable, size: 'small'}, {})
       }
     },
     {
-      title: 'Action',
+      title: hasOperationSysUserPermission.value ? '操作' : '',
       key: 'actions',
       fixed: 'right',
-      width: 250,
+      width: hasOperationSysUserPermission.value ? 110 : 50,
       render(row) {
         if (!row.enable) {
-          return h(NButton, {size:'tiny'}, {default: () => '删除'})
+          if (hasAnyPermission(['SYSTEM_USER:READ+DELETE'])) {
+            return h(NButton, {size: 'tiny'}, {default: () => '删除'})
+          }
         } else {
-          return h(NButton, {size:'tiny'}, {default: () => '编辑'})
+          const res = []
+          if (hasAnyPermission(['SYSTEM_USER:READ+UPDATE'])) {
+            res.push(h(NButton, {
+              text: true,
+              size: 'tiny',
+              class: 'pr-1',
+              onClick: () => showUserModal('edit', row)
+            }, {default: () => '编辑'}))
+          }
+          if (hasAnyPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER:READ+DELETE'])) {
+            res.push(h(BaseMoreAction, {options: options, onSelect: (item) => handleSelect(item, row)}, {}))
+          }
+          return res
         }
       }
     }
   ]
 })
+const handleSelect = (item: DropdownOption, record: UserListItem) => {
+  switch (item.key) {
+    case 'resetPassword':
+      resetPassword(record);
+      break;
+    case 'delete':
+      deleteUser(record);
+      break;
+    default:
+      break;
+  }
+}
+const resetPassword = (record?: UserListItem, isBatch?: boolean, params?: BatchActionQueryParams) => {
+  let selectIds = [record?.id || ''];
+  let title = `是否将 ${record?.name} 的密码重置为初始密码？`
+  if (isBatch) {
+    title = `是否将选中的 ${params?.currentSelectCount || checkedRowKeys.value.length} 个用户的密码重置为初始密码？`
+    selectIds = checkedRowKeys.value as string[]
+  }
+  let content = '初始的密码为用户邮箱，下次登录时生效'
+  if (record && record.name === 'admin') {
+    content = '初始的密码为 Password@，下次登录时生效'
+  }
+  window.$dialog.warning({
+    title: title, content: content,
+    positiveText: '确认重置',
+    negativeText: '取消',
+    maskClosable: false,
+    onPositiveClick: async () => {
+      await resetUserPassword({
+        selectIds,
+        selectAll: !!params?.selectAll,
+        excludeIds: params?.excludeIds || [],
+        condition: {keyword: keyword.value},
+      });
+      window.$message.success('重置成功')
+    }
+  })
+}
+const deleteUser = (record?: UserListItem, isBatch?: boolean, params?: BatchActionQueryParams) => {
+  let selectIds = [record?.id || ''];
+  let title = `确认删除 ${record?.name} 这个用户吗？`
+  if (isBatch) {
+    title = `确认删除已选中的 ${params?.currentSelectCount || checkedRowKeys.value.length} 个用户吗？`
+    selectIds = checkedRowKeys.value as string[]
+  }
+  window.$dialog.error({
+    title: title, content: '仅删除用户信息，不处理该用户的系统数据',
+    positiveText: '确认删除',
+    negativeText: '取消',
+    maskClosable: false,
+    onPositiveClick: async () => {
+      await deleteUserInfo({
+        selectIds,
+        selectAll: !!params?.selectAll,
+        excludeIds: params?.excludeIds || [],
+        condition: {keyword: keyword.value},
+      });
+      window.$message.success('删除成功')
+      await loadList()
+    }
+  })
+}
 const keyword = ref('');
-
+const tmpUserRoleIdList = ref<Array<string>>([])
 const showAddModel = ref(false)
+const userFormMode = ref<UserModalMode>('create');
 const handleCheck = (rowKeys: DataTableRowKey[]) => {
   checkedRowKeys.value = rowKeys
 }
@@ -83,10 +198,37 @@ const {data, send: loadList, loading} = usePagination((page, pageSize) => {
   data: resp => resp.records,
   total: resp => resp.totalRow,
 })
-const showUserModal = (_mode: UserModalMode, _record?: UserListItem) => {
+const userFrom = ref<UpdateUserInfoParams>({
+  id: '',
+  name: '',
+  email: '',
+  phone: '',
+  userRoleIdList: []
+})
+const showUserModal = (mode: UserModalMode, record?: UserListItem) => {
   showAddModel.value = true
+  userFormMode.value = mode
+  if (mode === 'edit' && record) {
+    userFrom.value.id = record.id
+    userFrom.value.name = record.name
+    userFrom.value.email = record.email
+    userFrom.value.phone = record.phone
+    userFrom.value.userRoleIdList = record.userRoleList.map(r => r.id)
+  }
 }
-onMounted(() => {
+// const handleTagClick = (record: UserListItem) => {
+//   if (hasAllPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER_ROLE:READ'])) {
+//     record.selectUserGroupVisible = true;
+//     tmpUserRoleIdList.value = record.userRoleList.map(u => u.id)
+//   }
+// }
+
+const init = async () => {
+  userGroupOptions.value = await getSystemRoles();
+
+}
+onBeforeMount(() => {
+  init()
   loadList()
 })
 </script>
@@ -106,7 +248,11 @@ onMounted(() => {
         @update:checked-row-keys="handleCheck"
     />
   </base-card>
-  <edit-user ref="editUserRef" v-model:show-modal="showAddModel" @reload="loadList"/>
+  <edit-user ref="editUserRef" v-model:show-modal="showAddModel"
+             :user-group-options="userGroupOptions"
+             v-model:user-form-mode="userFormMode"
+             v-model:update-user-info-params="userFrom"
+             @reload="loadList"/>
 </template>
 
 <style scoped>

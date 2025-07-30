@@ -1,18 +1,25 @@
 <script setup lang="ts">
 
 import BaseModal from '/@/components/BaseModal.vue'
-import {onBeforeMount, ref} from 'vue'
+import {computed, onBeforeMount, ref, watch} from 'vue'
 import type {FormInst, FormRules} from 'naive-ui'
 import {useForm} from 'alova/client'
-import {fetchCreateUser, getSystemRoles} from '/@/api/system/user.ts'
-import type {SystemRole} from '/@/types/user.ts'
+import {fetchCreateUser} from '/@/api/system/user.ts'
+import type {SystemRole, UpdateUserInfoParams} from '/@/types/user.ts'
 
-// type UserModalMode = 'create' | 'edit';
+interface IProps {
+  userGroupOptions: Array<SystemRole>
+}
+
 const emit = defineEmits(['reload'])
-// const userFormMode = ref<UserModalMode>('create');
-const title = ref('创建用户')
-const userGroupOptions = ref<SystemRole[]>([]);
+const props = defineProps<IProps>()
+
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false})
+const userFormMode = defineModel<'create' | 'edit'>('userFormMode')
+const updateUserInfoParams = defineModel<UpdateUserInfoParams>('updateUserInfoParams', {required: true})
+const title = computed(() => {
+  return userFormMode.value === 'create' ? '创建用户' : '编辑用户'
+})
 const formRef = ref<FormInst | null>(null)
 const rules: FormRules = {
   name: [
@@ -24,6 +31,7 @@ const rules: FormRules = {
 const {form, reset, send} = useForm(form => fetchCreateUser(form), {
   immediate: false,
   initialForm: {
+    id:'',
     name: '',
     email: '',
     userRoleIdList: [] as string[],
@@ -45,14 +53,21 @@ const handleCancel = () => {
   showModal.value = false
   formRef.value?.restoreValidation()
   reset()
-  form.value.userRoleIdList = userGroupOptions.value.filter(e => e.selected).map(o => o.id)
+  form.value.userRoleIdList = props.userGroupOptions?.filter(e => e.selected).map(o => o.id) as string[]
 }
 const init = async () => {
-  userGroupOptions.value = await getSystemRoles();
-  if (userGroupOptions.value.length) {
-    form.value.userRoleIdList = userGroupOptions.value.filter((e: SystemRole) => e.selected).map(o => o.id);
+  // userGroupOptions.value = await getSystemRoles();
+  if (props.userGroupOptions?.length) {
+    form.value.userRoleIdList = props.userGroupOptions?.filter((e: SystemRole) => e.selected).map(o => o.id);
   }
 }
+watch(() => updateUserInfoParams.value, (newValue) => {
+  form.value.id = newValue.id
+  form.value.name = newValue.name
+  form.value.email = newValue.email
+  form.value.phone = newValue.phone as string
+  form.value.userRoleIdList = newValue.userRoleIdList
+}, {deep: true})
 onBeforeMount(() => {
   init()
 })

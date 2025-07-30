@@ -71,6 +71,7 @@ public class SystemSchedule implements Serializable {
      */
     @Schema(description = "是否开启")
     private Boolean enable;
+    private Boolean runOnce;
 
     /**
      * 资源ID，api_scenario ui_scenario load_test

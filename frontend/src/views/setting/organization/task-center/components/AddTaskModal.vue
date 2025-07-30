@@ -37,7 +37,8 @@ const {form, reset, send} = useForm(form => fetchCreateSchedule(form), {
     job: '',
     value: '',
     resourceId: appStore.currentProjectId,
-    enable: true
+    enable: true,
+    runOnce: false
   }
 })
 const handleSubmit = () => {
@@ -90,6 +91,10 @@ const handleCancel = () => {
       <div class="mr-3">
         <n-switch size="small" v-model:value="form.enable"/>
         <span>状态</span>
+      </div>
+      <div class="mr-3">
+        <n-switch size="small" v-model:value="form.runOnce"/>
+        <span>是否可以单独运行</span>
       </div>
     </template>
   </base-modal>

@@ -34,6 +34,10 @@ public class ResultResponseBodyAdvice implements ResponseBodyAdvice<Object> {
             serverHttpResponse.getHeaders().setContentType(MediaType.APPLICATION_JSON);
             return JacksonUtils.toJSONString(ResultHandler.success(o));
         }
+        // 直接返回swagger请求结果
+        if ("/v3/api-docs/swagger-config".equals(serverHttpRequest.getURI().getPath())) {
+            return o;
+        }
         if (methodParameter.hasMethodAnnotation(NoResultHolder.class)) {
             return o;
         }

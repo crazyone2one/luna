@@ -1,6 +1,6 @@
 import type {BatchActionQueryParams, ICommonPage, ITableQueryParams} from '/@/types/common.ts'
 import {alovaInstance} from '/@/api'
-import type {addOrUpdateUserForm, SystemRole, UserListItem} from '/@/types/user.ts'
+import type {addOrUpdateUserForm, SystemRole, UpdateUserInfoParams, UserListItem} from '/@/types/user.ts'
 
 export const fetchUserPage = (data: ITableQueryParams) => {
     return alovaInstance.Post<ICommonPage<UserListItem>>('/system/user/page', data)
@@ -25,4 +25,11 @@ export const deleteUserInfo = (data: BatchActionQueryParams) => {
  */
 export const resetUserPassword = (data: BatchActionQueryParams) => {
     return alovaInstance.Post('/system/user/reset/password', data)
+}
+/**
+ * 更新用户信息
+ * @param data
+ */
+export const updateUserInfo = (data: UpdateUserInfoParams) => {
+    return alovaInstance.Post('/system/user/update', data)
 }

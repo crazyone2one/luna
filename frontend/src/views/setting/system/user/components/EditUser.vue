@@ -4,7 +4,7 @@ import BaseModal from '/@/components/BaseModal.vue'
 import {computed, onBeforeMount, ref, watch} from 'vue'
 import type {FormInst, FormRules} from 'naive-ui'
 import {useForm} from 'alova/client'
-import {fetchCreateUser} from '/@/api/system/user.ts'
+import {fetchCreateUser, updateUserInfo} from '/@/api/system/user.ts'
 import type {SystemRole, UpdateUserInfoParams} from '/@/types/user.ts'
 
 interface IProps {
@@ -28,10 +28,14 @@ const rules: FormRules = {
   ],
   email: {required: true, trigger: ['blur', 'input'], message: '邮箱不能为空'},
 }
-const {form, reset, send} = useForm(form => fetchCreateUser(form), {
+const {
+  form,
+  reset,
+  send
+} = useForm(form => userFormMode.value === 'create' ? fetchCreateUser(form) : updateUserInfo(form), {
   immediate: false,
   initialForm: {
-    id:'',
+    id: '',
     name: '',
     email: '',
     userRoleIdList: [] as string[],
@@ -43,7 +47,7 @@ const handleSubmit = () => {
     if (!e) {
       send().then(() => {
         showModal.value = false
-        window.$message.success('创建成功')
+        window.$message.success(userFormMode.value === 'create'?'创建成功':'更新成功')
         emit('reload')
       })
     }

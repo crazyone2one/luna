@@ -4,11 +4,11 @@ import BaseCard from '/@/components/BaseCard.vue'
 import {computed, h, onBeforeMount, ref, useTemplateRef} from 'vue'
 import {type DataTableColumns, type DataTableRowKey, type DropdownOption, NButton, NSelect, NSwitch} from 'naive-ui'
 import type {SystemRole, UpdateUserInfoParams, UserListItem} from '/@/types/user.ts'
-import {usePagination} from 'alova/client'
-import {deleteUserInfo, fetchUserPage, getSystemRoles, resetUserPassword} from '/@/api/system/user.ts'
+import {usePagination, useRequest} from 'alova/client'
+import {deleteUserInfo, fetchUserPage, getSystemRoles, resetUserPassword, updateUserInfo} from '/@/api/system/user.ts'
 import EditUser from '/@/views/setting/system/user/components/EditUser.vue'
 import BaseTagGroup from '/@/components/BaseTagGroup.vue'
-import {hasAnyPermission} from '/@/utils/permission.ts'
+import {hasAllPermission, hasAnyPermission} from '/@/utils/permission.ts'
 import BaseMoreAction from '/@/components/BaseMoreAction.vue'
 import type {BatchActionQueryParams} from '/@/types/common.ts'
 
@@ -66,16 +66,19 @@ const columns = computed<DataTableColumns<UserListItem>>(() => {
       render(row) {
         if (!row.selectUserGroupVisible) {
           return h(BaseTagGroup, {
-            type: 'primary', tagList: row.userRoleList
+            type: 'primary', tagList: row.userRoleList,
+            onClick: () => handleTagClick(row)
           }, {})
         } else {
           return h(NSelect, {
-            value: tmpUserRoleIdList.value,
+            value: row.userRoleList.map(u => u.id),
             placeholder: '请选择用户组',
             options: userGroupOptions.value,
             labelField: 'name',
             valueField: 'id',
-            class: 'w-full max-w-[300px]', clearable: true, multiple: true
+            class: 'w-full max-w-[300px]', clearable: true, multiple: true, size: 'small',
+            loading: selectUserGroupLoading.value,
+            onUpdateValue: (value) => handleUserGroupChange(value, row)
           }, {})
         }
       }
@@ -180,7 +183,6 @@ const deleteUser = (record?: UserListItem, isBatch?: boolean, params?: BatchActi
   })
 }
 const keyword = ref('');
-const tmpUserRoleIdList = ref<Array<string>>([])
 const showAddModel = ref(false)
 const userFormMode = ref<UserModalMode>('create');
 const handleCheck = (rowKeys: DataTableRowKey[]) => {
@@ -216,13 +218,29 @@ const showUserModal = (mode: UserModalMode, record?: UserListItem) => {
     userFrom.value.userRoleIdList = record.userRoleList.map(r => r.id)
   }
 }
-// const handleTagClick = (record: UserListItem) => {
-//   if (hasAllPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER_ROLE:READ'])) {
-//     record.selectUserGroupVisible = true;
-//     tmpUserRoleIdList.value = record.userRoleList.map(u => u.id)
-//   }
-// }
+const handleTagClick = (record: UserListItem) => {
+  if (hasAllPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER_ROLE:READ'])) {
+    record.selectUserGroupVisible = true;
+  }
+}
+const {
+  send: updateUser,
+  loading: selectUserGroupLoading
+} = useRequest((param) => updateUserInfo(param), {immediate: false})
+const handleUserGroupChange = (value: Array<string>, record: UserListItem & Record<string, any>) => {
+  const params = {
+    id: record.id,
+    name: record.name,
+    email: record.email,
+    phone: record.phone,
+    userRoleIdList: value,
+  };
+  updateUser(params).then(() => {
+    record.selectUserGroupVisible = false
+    window.$message.success('更新成功')
+  })
 
+}
 const init = async () => {
   userGroupOptions.value = await getSystemRoles();
 

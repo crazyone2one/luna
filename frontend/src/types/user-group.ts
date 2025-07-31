@@ -91,3 +91,11 @@ export interface OrgUserGroupParams extends BaseUserGroupParams{
 export interface SystemUserGroupParams extends BaseUserGroupParams{
     scopeId?: string; // 组织ID
 }
+export interface SavePermissions {
+    id: string;
+    enable: boolean;
+}
+export interface SaveGlobalUSettingData {
+    userRoleId: string;
+    permissions: SavePermissions[];
+}

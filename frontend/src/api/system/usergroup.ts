@@ -1,6 +1,7 @@
 import {alovaInstance} from '/@/api'
 import type {
     OrgUserGroupParams,
+    SaveGlobalUSettingData,
     SystemUserGroupParams,
     UserGroupAuthSetting,
     UserGroupItem
@@ -126,4 +127,25 @@ export const updateOrAddProjectUserGroup = (data: SystemUserGroupParams) => {
 
 export const getGlobalUserGroup = (organizationId: string) => {
     return alovaInstance.Get<Array<ISelectOption>>(`/organization/user/role/list/${organizationId}`)
+}
+/**
+ * 系统-编辑用户组对应的权限配置
+ * @param data
+ */
+export const saveGlobalUSetting = (data: SaveGlobalUSettingData) => {
+    return alovaInstance.Post<Array<UserGroupAuthSetting>>('/user/role/global/permission/update', data)
+}
+/**
+ * 组织-编辑用户组对应的权限配置
+ * @param data
+ */
+export const saveOrgUSetting = (data: SaveGlobalUSettingData) => {
+    return alovaInstance.Post<Array<UserGroupAuthSetting>>('/user/role/organization/permission/update', data)
+}
+/**
+ * 项目-编辑用户组对应的权限配置
+ * @param data
+ */
+export const saveProjectUGSetting = (data: SaveGlobalUSettingData) => {
+    return alovaInstance.Post<Array<UserGroupAuthSetting>>('/user/role/project/permission/update', data)
 }

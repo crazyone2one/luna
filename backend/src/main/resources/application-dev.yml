@@ -49,6 +49,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    disable-swagger-default-url: true
 logging:
   level:
     web: debug # Web 模块日志级别

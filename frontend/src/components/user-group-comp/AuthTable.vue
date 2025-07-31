@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import {computed, h, inject, ref, type VNode, watchEffect} from 'vue'
-import type {AuthTableItem, CurrentUserGroupItem, UserGroupAuthSetting} from '/@/types/user-group.ts'
+import type {AuthTableItem, CurrentUserGroupItem, SavePermissions, UserGroupAuthSetting} from '/@/types/user-group.ts'
 import {type DataTableColumns, NButton, NCheckbox, NCheckboxGroup} from 'naive-ui'
 import {AuthScopeEnum} from '/@/enums/common.ts'
-import {fetchAuthByUserGroup, fetchGlobalUSetting, fetchOrgUSetting} from '/@/api/system/usergroup.ts'
+import {
+  fetchAuthByUserGroup,
+  fetchGlobalUSetting,
+  fetchOrgUSetting,
+  saveGlobalUSetting,
+  saveOrgUSetting,
+  saveProjectUGSetting
+} from '/@/api/system/usergroup.ts'
+import {useRequest} from 'alova/client'
 
 const systemType = inject<string>('systemType');
 const props = withDefaults(
@@ -231,7 +239,7 @@ const makeData = (item: UserGroupAuthSetting) => {
 }
 const initData = async (id: string) => {
   tableData.value = []; // 重置数据，可以使表格滚动条重新计算
-  let res: UserGroupAuthSetting[] = [];
+  let res: UserGroupAuthSetting[];
   if (systemType === AuthScopeEnum.SYSTEM) {
     res = await fetchGlobalUSetting(id);
   } else if (systemType === AuthScopeEnum.ORGANIZATION) {
@@ -264,6 +272,37 @@ const handleReset = () => {
     initData(props.current.id);
   }
 }
+const {send: savePermission} = useRequest((param) => {
+  if (systemType === AuthScopeEnum.SYSTEM) {
+    return saveGlobalUSetting(param)
+  } else if (systemType === AuthScopeEnum.ORGANIZATION) {
+    return saveOrgUSetting(param)
+  } else {
+    return saveProjectUGSetting(param)
+  }
+}, {immediate: false})
+const handleSave = () => {
+  if (!tableData.value) return;
+  const permissions: SavePermissions[] = [];
+  const tmpArr = tableData.value;
+  tmpArr.forEach((item) => {
+    item.permissions?.forEach((ele) => {
+      ele.enable = item.perChecked?.includes(ele.id) || false;
+      permissions.push({
+        id: ele.id,
+        enable: ele.enable,
+      });
+    });
+  });
+  savePermission({
+    userRoleId: props.current.id,
+    permissions,
+  }).then(() => {
+    canSave.value = false
+    window.$message.success('保存成功')
+    initData(props.current.id);
+  })
+}
 watchEffect(() => {
   if (props.current.id) {
     initData(props.current.id)
@@ -271,7 +310,7 @@ watchEffect(() => {
 })
 defineExpose({
   canSave,
-  // handleSave,
+  handleSave,
   handleReset,
 });
 </script>
@@ -289,7 +328,10 @@ defineExpose({
          v-permission="props.savePermission || []"
          class="footer">
       <n-button :disabled="!canSave" @click="handleReset">撤销修改</n-button>
-      <n-button v-permission="props.savePermission || []" type="primary" :disabled="!canSave">保存</n-button>
+      <n-button v-permission="props.savePermission || []" type="primary" :disabled="!canSave"
+                @click="handleSave">
+        保存
+      </n-button>
     </div>
   </div>
 </template>
@@ -304,6 +346,7 @@ defineExpose({
 .footer {
   display: flex;
   justify-content: flex-end;
+  padding: 24px;
   box-shadow: 0 -1px 4px rgb(2 2 2 / 10%);
   gap: 16px;
 }

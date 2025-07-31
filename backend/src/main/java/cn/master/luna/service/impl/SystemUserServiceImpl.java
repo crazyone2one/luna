@@ -12,6 +12,7 @@ import cn.master.luna.exception.CustomException;
 import cn.master.luna.mapper.SystemUserMapper;
 import cn.master.luna.mapper.UserRoleRelationMapper;
 import cn.master.luna.service.SystemUserService;
+import cn.master.luna.service.UserRoleRelationService;
 import cn.master.luna.util.SessionUtils;
 import cn.master.luna.util.Translator;
 import com.mybatisflex.core.paginate.Page;
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +52,7 @@ import static cn.master.luna.entity.table.UserRoleRelationTableDef.USER_ROLE_REL
 public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemUser> implements SystemUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRoleRelationMapper userRoleRelationMapper;
+    private final UserRoleRelationService userRoleRelationService;
 
     @Override
     public Page<UserTableResponse> getUserPage(BasePageRequest request) {
@@ -171,6 +174,24 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         queryWrapper.where(USER_ROLE_RELATION.USER_ID.in(userIdList));
         userRoleRelationMapper.deleteByQuery(queryWrapper);
         return response;
+    }
+
+    @Override
+    public AddUserRequest updateUser(AddUserRequest request, String operator) {
+        checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), true);
+        checkUserEmail(request.getId(), request.getEmail());
+        SystemUser user = new SystemUser();
+        BeanUtils.copyProperties(request, user);
+        user.setUpdateUser(operator);
+        mapper.update(user);
+        userRoleRelationService.updateUserSystemGlobalRole(user, user.getUpdateUser(), request.getUserRoleIdList());
+        return request;
+    }
+
+    private void checkUserEmail(String id, String email) {
+        if (queryChain().where(SYSTEM_USER.EMAIL.eq(email).and(SYSTEM_USER.ID.ne(id))).exists()) {
+            throw new CustomException(Translator.get("user_email_already_exists"));
+        }
     }
 
     private void checkProcessUserAndThrowException(List<String> userIdList, String operatorId, String operatorName, String exceptionMessage) {

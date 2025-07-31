@@ -2,6 +2,7 @@ package cn.master.luna.controller;
 
 import cn.master.luna.constants.Created;
 import cn.master.luna.constants.OperationLogType;
+import cn.master.luna.constants.Updated;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
@@ -58,13 +59,13 @@ public class SystemUserController {
     /**
      * 根据主键更新用户。
      *
-     * @param systemUser 用户
+     * @param request 用户
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
-    @PutMapping("update")
-    @Operation(description = "根据主键更新用户")
-    public boolean update(@RequestBody @Parameter(description = "用户主键") SystemUser systemUser) {
-        return systemUserService.updateById(systemUser);
+    @PostMapping("update")
+    @Operation(description = "系统设置-系统-用户-修改用户")
+    public AddUserRequest update(@Validated({Updated.class}) @RequestBody AddUserRequest request) {
+        return systemUserService.updateUser(request, SessionUtils.getUserName());
     }
 
     /**

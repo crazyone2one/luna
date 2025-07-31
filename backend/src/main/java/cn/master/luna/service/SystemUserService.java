@@ -28,4 +28,6 @@ public interface SystemUserService extends IService<SystemUser> {
     TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String userName);
 
     TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName);
+
+    AddUserRequest updateUser(AddUserRequest request, String operator);
 }

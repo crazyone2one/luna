@@ -1,30 +1,38 @@
 package cn.master.luna.service.impl;
 
-import cn.master.luna.constants.UserRoleScope;
-import cn.master.luna.constants.UserRoleType;
+import cn.master.luna.constants.*;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import cn.master.luna.entity.UserRoleRelation;
+import cn.master.luna.entity.dto.LogDTO;
 import cn.master.luna.entity.dto.UserRoleRelationUserDTO;
 import cn.master.luna.entity.request.GlobalUserRoleRelationQueryRequest;
 import cn.master.luna.entity.request.GlobalUserRoleRelationUpdateRequest;
 import cn.master.luna.exception.CustomException;
 import cn.master.luna.mapper.SystemUserRoleMapper;
 import cn.master.luna.mapper.UserRoleRelationMapper;
+import cn.master.luna.service.OperationLogService;
 import cn.master.luna.service.UserRoleRelationService;
+import cn.master.luna.util.JacksonUtils;
 import cn.master.luna.util.ServiceUtils;
 import cn.master.luna.util.Translator;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static cn.master.luna.entity.table.SystemUserRoleTableDef.SYSTEM_USER_ROLE;
 import static cn.master.luna.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static cn.master.luna.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
 import static cn.master.luna.exception.SystemResultCode.*;
@@ -39,6 +47,7 @@ import static cn.master.luna.exception.SystemResultCode.*;
 @RequiredArgsConstructor
 public class UserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelationMapper, UserRoleRelation> implements UserRoleRelationService {
     private final SystemUserRoleMapper systemUserRoleMapper;
+    private final OperationLogService operationLogService;
 
     @Override
     public Page<UserRoleRelationUserDTO> listUser(GlobalUserRoleRelationQueryRequest request) {
@@ -88,6 +97,89 @@ public class UserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelationMap
             userRoleRelations.add(userRoleRelation);
         });
         mapper.insertBatch(userRoleRelations);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserSystemGlobalRole(SystemUser user, String operator, List<String> roleList) {
+        List<String> deleteRoleList = new ArrayList<>();
+        List<UserRoleRelation> saveList = new ArrayList<>();
+        List<UserRoleRelation> userRoleRelationList = selectGlobalRoleByUserId(user.getId());
+        List<String> userSavedRoleIdList = userRoleRelationList.stream().map(UserRoleRelation::getRoleId).toList();
+        //获取要移除的权限
+        for (String userSavedRoleId : userSavedRoleIdList) {
+            if (!roleList.contains(userSavedRoleId)) {
+                deleteRoleList.add(userSavedRoleId);
+            }
+        }
+        //获取要添加的权限
+        for (String roleId : roleList) {
+            if (!userSavedRoleIdList.contains(roleId)) {
+                UserRoleRelation userRoleRelation = new UserRoleRelation();
+                userRoleRelation.setUserId(user.getId());
+                userRoleRelation.setRoleId(roleId);
+                userRoleRelation.setSourceId(UserRoleScope.SYSTEM);
+                userRoleRelation.setCreateUser(operator);
+                userRoleRelation.setOrganizationId(UserRoleScope.SYSTEM);
+                saveList.add(userRoleRelation);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(deleteRoleList)) {
+            List<String> deleteIdList = new ArrayList<>();
+            userRoleRelationList.forEach(item -> {
+                if (deleteRoleList.contains(item.getRoleId())) {
+                    deleteIdList.add(item.getId());
+                }
+            });
+            mapper.deleteBatchByIds(deleteIdList);
+            //记录删除日志
+            operationLogService.batchAdd(getBatchLogs(deleteRoleList, user, "updateUser", operator, OperationLogType.DELETE.name()));
+        }
+        if (CollectionUtils.isNotEmpty(saveList)) {
+            //系统级权限不会太多，所以暂时不分批处理
+            saveList.forEach(item -> mapper.insert(item));
+            //记录添加日志
+            operationLogService.batchAdd(getBatchLogs(saveList.stream().map(UserRoleRelation::getRoleId).toList(),
+                    user, "updateUser", operator, OperationLogType.ADD.name()));
+        }
+    }
+
+    private List<LogDTO> getBatchLogs(@Valid @NotEmpty List<String> userRoleId,
+                                      @Valid SystemUser user,
+                                      @Valid @NotEmpty String operationMethod,
+                                      @Valid @NotEmpty String operator,
+                                      @Valid @NotEmpty String operationType) {
+        List<LogDTO> logs = new ArrayList<>();
+        List<SystemUserRole> userRoleList = systemUserRoleMapper.selectListByIds(userRoleId);
+        userRoleList.forEach(userRole -> {
+            LogDTO log = new LogDTO();
+            log.setProjectId(OperationLogConstants.SYSTEM);
+            log.setOrganizationId(OperationLogConstants.SYSTEM);
+            log.setType(operationType);
+            log.setCreateUser(operator);
+            log.setModule(OperationLogModule.SETTING_SYSTEM_USER_SINGLE);
+            log.setMethod(operationMethod);
+            log.setSourceId(user.getId());
+            log.setContent(user.getName() + StringUtils.SPACE
+                    + Translator.get(StringUtils.lowerCase(operationType)) + StringUtils.SPACE
+                    + Translator.get("permission.project_group.name") + StringUtils.SPACE
+                    + userRole.getName());
+            log.setOriginalValue(JacksonUtils.toJSONBytes(userRole));
+            logs.add(log);
+        });
+        return logs;
+    }
+
+    private List<UserRoleRelation> selectGlobalRoleByUserId(String userId) {
+        List<String> userRoleIds = QueryChain.of(SystemUserRole.class)
+                .select(SystemUserRole::getId)
+                .from(SYSTEM_USER_ROLE)
+                .where(SYSTEM_USER_ROLE.TYPE.eq("SYSTEM").and(SYSTEM_USER_ROLE.SCOPE_ID.eq("global")))
+                .listAs(String.class);
+        return queryChain()
+                .where(USER_ROLE_RELATION.USER_ID.eq(userId))
+                .and(USER_ROLE_RELATION.ROLE_ID.in(userRoleIds))
+                .list();
     }
 
     private void checkExist(UserRoleRelation userRoleRelation) {

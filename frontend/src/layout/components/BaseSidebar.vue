@@ -10,7 +10,7 @@ const activeMenu = ref<string>('')
 const menuOptions: MenuOption[] = [
   {
     label: () => h(RouterLink, {to: {name: 'Home'}}, {default: () => 'Home'}),
-    key: 'home',
+    key: 'Home',
     icon: () => h(BaseIcon, {type: 'dashboard'},)
   },
   {
@@ -57,6 +57,10 @@ const menuOptions: MenuOption[] = [
           {
             label: () => h(RouterLink, {to: {name: 'settingSystemTaskCenter'}}, {default: () => '任务中心'}),
             key: 'settingSystemTaskCenter', path: '/settings/taskCenter'
+          },
+          {
+            label: () => h(RouterLink, {to: {name: 'settingSystemLog'}}, {default: () => '日志'}),
+            key: 'settingSystemLog', path: '/settings/system/log'
           }
         ]
       }

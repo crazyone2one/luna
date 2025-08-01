@@ -1,5 +1,5 @@
 import {createApp} from 'vue'
-// import './style.css'
+import './style.css'
 import App from './App.vue'
 import {naive} from '/@/plugins/naive.ts'
 import router from '/@/router/index.ts'

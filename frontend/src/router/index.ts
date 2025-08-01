@@ -69,6 +69,12 @@ const routes: RouteRecordRaw[] = [
                         component: () => import('/@/views/setting/system/user/index.vue'),
                         meta: {title: '用户', menuKey: 'settingSystemUser'}
                     },
+                    {
+                        path: '/system/log',
+                        name: 'settingSystemLog',
+                        component: () => import('/@/views/setting/system/log/index.vue'),
+                        meta: {title: '日志', menuKey: 'settingSystemUser'}
+                    },
                 ]
             },
         ]

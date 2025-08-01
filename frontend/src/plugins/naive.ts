@@ -13,6 +13,7 @@ import {
     NForm,
     NFormItem,
     NFormItemGi,
+    NGi,
     NGrid,
     NIcon,
     NInput,
@@ -45,7 +46,7 @@ const naive = create({
         NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
         NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin, NSelect,
-        NTag, NSwitch, NCheckboxGroup, NCheckbox, NSplit, NRadioGroup, NRadio, NRadioButton, NPopover, NDivider
+        NTag, NSwitch, NCheckboxGroup, NCheckbox, NSplit, NRadioGroup, NRadio, NRadioButton, NPopover, NDivider, NGi
     ]
 })
 

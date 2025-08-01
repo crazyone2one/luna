@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {type FormInst, NH1, NH2} from 'naive-ui'
+import {type FormInst, NH1} from 'naive-ui'
 import {computed, ref} from 'vue'
 import {fetchLogin} from '/@/api/auth'
 import {useForm} from 'alova/client'
@@ -61,7 +61,7 @@ const disabled = computed<boolean>(() => form.value.username === '' || form.valu
 <template>
   <n-h1 style="--font-size: 60px; --font-weight: 100">{{ title }}</n-h1>
   <n-card size="large" style="--padding-bottom: 30px">
-    <n-h2 style="--font-weight: 400">Sign-in</n-h2>
+<!--    <n-h2 style="&#45;&#45;font-weight: 400">Sign-in</n-h2>-->
     <n-form ref="formRef" size="large" :rules="rules" :model="form">
       <n-form-item path="username">
         <n-input v-model:value="form.username" placeholder="请输入用户名"/>

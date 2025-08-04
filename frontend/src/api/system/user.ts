@@ -41,18 +41,23 @@ export const updateUserInfo = (data: UpdateUserInfoParams) => {
     return alovaInstance.Post('/system/user/update', data)
 }
 
-
+/**
+ * 下载导入模板
+ */
 export const getUserTemplate = () => {
     return xhrInst.Get<AlovaXHRResponse>('/system/user/templates/download',
-        {
-            responseType: 'blob',
-        })
+        {responseType: 'blob'}
+    )
 }
 
+/**
+ * 导入user
+ * @param data
+ */
 export function importUserInfo(data: File) {
     const formData = new FormData();
     formData.append('file', data);
-    return xhrInst.Post<ICommonResponse<ImportResult>>('/system/user/import', formData, {
-        responseType: 'json'
-    });
+    return xhrInst.Post<AlovaXHRResponse<ICommonResponse<ImportResult>>>('/system/user/import', formData,
+        {responseType: 'json'}
+    );
 }

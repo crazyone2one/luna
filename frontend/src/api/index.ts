@@ -54,7 +54,9 @@ export const alovaInstance = createAlova({
         }
     }
 });
-
+/**
+ * 使用xhrRequest创建实例
+ */
 export const xhrInst = createAlova({
     baseURL: `${window.location.origin}/${import.meta.env.VITE_API_BASE_URL}`,
     statesHook: VueHook,
@@ -68,7 +70,7 @@ export const xhrInst = createAlova({
     },
     responded: {
         onSuccess: async (response, _method) => {
-            return response.data;
+            return response;
         },
     }
 });

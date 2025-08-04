@@ -7,6 +7,7 @@ import cn.master.luna.handler.excel.UserExcelValidateHelper;
 import cn.master.luna.util.Translator;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,16 +17,13 @@ import org.springframework.beans.BeanUtils;
 /**
  * @author Created by 11's papa on 2025/8/4
  */
+@Getter
 @Slf4j
 public class UserImportEventListener extends AnalysisEventListener<UserTemplate> {
     private final ExcelParseDTO<UserExcelRowDTO> excelParseDTO;
 
     public UserImportEventListener() {
         excelParseDTO = new ExcelParseDTO<>();
-    }
-
-    public ExcelParseDTO<UserExcelRowDTO> getExcelParseDTO() {
-        return excelParseDTO;
     }
 
     @Override
@@ -37,7 +35,7 @@ public class UserImportEventListener extends AnalysisEventListener<UserTemplate>
             if (StringUtils.isEmpty(errMsg)) {
                 errMsg = businessValidate(userTemplate);
             }
-        } catch (NoSuchFieldException e) {
+        } catch (Exception e) {
             errMsg = Translator.get("excel.parse.error");
             log.error(e.getMessage(), e);
         }

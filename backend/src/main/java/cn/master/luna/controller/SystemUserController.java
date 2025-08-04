@@ -13,7 +13,7 @@ import cn.master.luna.service.SystemUserRoleService;
 import cn.master.luna.service.SystemUserService;
 import cn.master.luna.service.log.UserLogService;
 import cn.master.luna.util.SessionUtils;
-import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.EasyExcelFactory;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -137,10 +137,11 @@ public class SystemUserController {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
-        String fileName = URLEncoder.encode("user_import" + System.currentTimeMillis() + ".xlsx", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        String fileName = URLEncoder.encode("user_import_" + System.currentTimeMillis(), StandardCharsets.UTF_8);
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-        EasyExcel.write(response.getOutputStream(), UserTemplate.class).sheet("模板").doWrite((Collection<?>) null);
+        EasyExcelFactory.write(response.getOutputStream(), UserTemplate.class).sheet("模板").doWrite((Collection<?>) null);
     }
+
     @PostMapping(value = "/import", consumes = {"multipart/form-data"})
     @Operation(summary = "系统设置-系统-用户-导入用户")
     public UserImportResponse importUser(@RequestPart(value = "file", required = false) MultipartFile excelFile) {

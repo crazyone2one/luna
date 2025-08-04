@@ -4,6 +4,7 @@ import cn.master.luna.constants.Created;
 import cn.master.luna.constants.OperationLogType;
 import cn.master.luna.constants.Updated;
 import cn.master.luna.entity.SystemUser;
+import cn.master.luna.entity.UserTemplate;
 import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
@@ -12,14 +13,21 @@ import cn.master.luna.service.SystemUserRoleService;
 import cn.master.luna.service.SystemUserService;
 import cn.master.luna.service.log.UserLogService;
 import cn.master.luna.util.SessionUtils;
+import com.alibaba.excel.EasyExcel;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -120,5 +128,22 @@ public class SystemUserController {
     @Log(type = OperationLogType.UPDATE, expression = "#msClass.resetPasswordLog(#request)", msClass = UserLogService.class)
     public TableBatchProcessResponse resetPassword(@Validated @RequestBody TableBatchProcessDTO request) {
         return systemUserService.resetPassword(request, SessionUtils.getUserName());
+    }
+
+    @GetMapping("/templates/download")
+    @Operation(summary = "系统设置-系统-用户-用户导入模板")
+    public void download(HttpServletResponse response) throws IOException {
+        // 这里注意 有同学反应使用swagger 会导致各种问题，请直接用浏览器或者用postman
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
+        String fileName = URLEncoder.encode("user_import" + System.currentTimeMillis() + ".xlsx", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        EasyExcel.write(response.getOutputStream(), UserTemplate.class).sheet("模板").doWrite((Collection<?>) null);
+    }
+    @PostMapping(value = "/import", consumes = {"multipart/form-data"})
+    @Operation(summary = "系统设置-系统-用户-导入用户")
+    public UserImportResponse importUser(@RequestPart(value = "file", required = false) MultipartFile excelFile) {
+        return systemUserService.importByExcel(excelFile, "LOCAL", SessionUtils.getUserName());
     }
 }

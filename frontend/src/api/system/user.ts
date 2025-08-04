@@ -1,5 +1,12 @@
-import type {BatchActionQueryParams, ICommonPage, ITableQueryParams} from '/@/types/common.ts'
-import {alovaInstance} from '/@/api'
+import type {
+    AlovaXHRResponse,
+    BatchActionQueryParams,
+    ICommonPage,
+    ICommonResponse,
+    ImportResult,
+    ITableQueryParams
+} from '/@/types/common.ts'
+import {alovaInstance, xhrInst} from '/@/api'
 import type {addOrUpdateUserForm, SystemRole, UpdateUserInfoParams, UserListItem} from '/@/types/user.ts'
 
 export const fetchUserPage = (data: ITableQueryParams) => {
@@ -32,4 +39,20 @@ export const resetUserPassword = (data: BatchActionQueryParams) => {
  */
 export const updateUserInfo = (data: UpdateUserInfoParams) => {
     return alovaInstance.Post('/system/user/update', data)
+}
+
+
+export const getUserTemplate = () => {
+    return xhrInst.Get<AlovaXHRResponse>('/system/user/templates/download',
+        {
+            responseType: 'blob',
+        })
+}
+
+export function importUserInfo(data: File) {
+    const formData = new FormData();
+    formData.append('file', data);
+    return xhrInst.Post<ICommonResponse<ImportResult>>('/system/user/import', formData, {
+        responseType: 'json'
+    });
 }

@@ -29,6 +29,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mybatis-flex.version>1.10.8</mybatis-flex.version>
         <redisson-starter.version>3.49.0</redisson-starter.version>
+        <easyexcel.version>4.0.3</easyexcel.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -161,6 +162,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>${easyexcel.version}</version>
         </dependency>
     </dependencies>
 

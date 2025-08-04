@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "alova": "^3.3.3",
+    "@alova/adapter-xhr": "^2.2.0",
+    "alova": "^3.3.4",
     "dayjs": "^1.11.13",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.4.1",

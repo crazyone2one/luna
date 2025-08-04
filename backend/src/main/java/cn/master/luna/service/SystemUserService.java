@@ -6,6 +6,7 @@ import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -30,4 +31,6 @@ public interface SystemUserService extends IService<SystemUser> {
     TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName);
 
     AddUserRequest updateUser(AddUserRequest request, String operator);
+
+    UserImportResponse importByExcel(MultipartFile excelFile, String source, String operator);
 }

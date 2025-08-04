@@ -1,6 +1,7 @@
 import {
     create,
     NA,
+    NAlert,
     NAvatar,
     NBadge,
     NButton,
@@ -9,6 +10,8 @@ import {
     NCheckboxGroup,
     NDataTable,
     NDivider,
+    NDrawer,
+    NDrawerContent,
     NDropdown,
     NForm,
     NFormItem,
@@ -36,7 +39,9 @@ import {
     NSwitch,
     NTag,
     NText,
-    NTooltip
+    NTooltip,
+    NUpload,
+    NUploadDragger
 } from 'naive-ui'
 import {Home, LogOut, Menu as MenuIcon, Moon, Settings,} from '@vicons/ionicons5'
 
@@ -46,7 +51,8 @@ const naive = create({
         NButton, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter,
         NMenu, NIcon, NAvatar, NDropdown, NBadge, NTooltip,
         NResult, NCard, NForm, NFormItem, NGrid, NFormItemGi, NInput, NA, NText, NP, NSpace, NDataTable, NSpin, NSelect,
-        NTag, NSwitch, NCheckboxGroup, NCheckbox, NSplit, NRadioGroup, NRadio, NRadioButton, NPopover, NDivider, NGi
+        NTag, NSwitch, NCheckboxGroup, NCheckbox, NSplit, NRadioGroup, NRadio, NRadioButton, NPopover, NDivider, NGi,
+        NAlert,NUpload,NUploadDragger,NDrawer,NDrawerContent
     ]
 })
 

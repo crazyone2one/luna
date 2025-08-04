@@ -4,6 +4,7 @@ import adapterFetch from 'alova/fetch'
 import VueHook from 'alova/vue';
 import {ContentTypeEnum} from '/@/enums/httpEnum.ts'
 import {storage} from '/@/utils'
+import {xhrRequestAdapter} from '@alova/adapter-xhr'
 
 export const alovaInstance = createAlova({
     baseURL: `${window.location.origin}/${import.meta.env.VITE_API_BASE_URL}`,
@@ -51,5 +52,23 @@ export const alovaInstance = createAlova({
         onComplete: async _method => {
             // 处理请求完成逻辑
         }
+    }
+});
+
+export const xhrInst = createAlova({
+    baseURL: `${window.location.origin}/${import.meta.env.VITE_API_BASE_URL}`,
+    statesHook: VueHook,
+    requestAdapter: xhrRequestAdapter(),
+    // ...
+    async beforeRequest(method) {
+        const {access = ''} = storage.get<{ access: string }>('token') ?? {}
+        if (access) {
+            method.config.headers.Authorization = `Bearer ${access}`;
+        }
+    },
+    responded: {
+        onSuccess: async (response, _method) => {
+            return response.data;
+        },
     }
 });

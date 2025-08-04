@@ -1,28 +1,30 @@
 package cn.master.luna.service.impl;
 
 import cn.master.luna.constants.UserRoleScope;
-import cn.master.luna.entity.SystemOrganization;
-import cn.master.luna.entity.SystemUser;
-import cn.master.luna.entity.SystemUserRole;
-import cn.master.luna.entity.UserRoleRelation;
+import cn.master.luna.entity.*;
 import cn.master.luna.entity.dto.*;
 import cn.master.luna.entity.request.AddUserRequest;
 import cn.master.luna.entity.request.MemberRequest;
 import cn.master.luna.exception.CustomException;
+import cn.master.luna.handler.listener.UserImportEventListener;
 import cn.master.luna.mapper.SystemUserMapper;
 import cn.master.luna.mapper.UserRoleRelationMapper;
 import cn.master.luna.service.SystemUserService;
 import cn.master.luna.service.UserRoleRelationService;
 import cn.master.luna.util.SessionUtils;
 import cn.master.luna.util.Translator;
+import com.alibaba.excel.EasyExcelFactory;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -30,7 +32,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +51,7 @@ import static cn.master.luna.entity.table.UserRoleRelationTableDef.USER_ROLE_REL
  * @author 11's papa
  * @since 1.0.0 2025-07-01
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemUser> implements SystemUserService {
@@ -186,6 +191,69 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         mapper.update(user);
         userRoleRelationService.updateUserSystemGlobalRole(user, user.getUpdateUser(), request.getUserRoleIdList());
         return request;
+    }
+
+    @Override
+    public UserImportResponse importByExcel(MultipartFile excelFile, String source, String operator) {
+        UserImportResponse importResponse = new UserImportResponse();
+        ExcelParseDTO<UserExcelRowDTO> excelParseDTO = new ExcelParseDTO<>();
+        try {
+            excelParseDTO = getUserExcelParseDTO(excelFile);
+        } catch (Exception e) {
+            log.error("import user  error", e);
+        }
+        if (CollectionUtils.isNotEmpty(excelParseDTO.getDataList())) {
+            saveUserByExcelData(excelParseDTO.getDataList(), source, operator);
+        }
+        importResponse.generateResponse(excelParseDTO);
+        return importResponse;
+    }
+
+    private void saveUserByExcelData(@Valid @NotEmpty List<UserExcelRowDTO> dataList,
+                                     @Valid @NotEmpty String source,
+                                     @Valid @NotBlank String operator) {
+        dataList.forEach(dto -> {
+            SystemUser user = new SystemUser();
+            user.setName(dto.getName());
+            user.setEmail(dto.getEmail());
+            user.setPhone(dto.getPhone());
+            user.setEnable(true);
+            user.setSource(source);
+            user.setCreateUser(operator);
+            user.setUpdateUser(operator);
+            user.setPassword(passwordEncoder.encode(dto.getEmail()));
+            mapper.insert(user);
+            UserRoleRelation relation = new UserRoleRelation();
+            relation.setRoleId("member");
+            relation.setUserId(user.getId());
+            relation.setSourceId(UserRoleScope.SYSTEM);
+            relation.setOrganizationId(UserRoleScope.SYSTEM);
+            relation.setCreateUser(SessionUtils.getCurrentUserId());
+            userRoleRelationMapper.insert(relation);
+        });
+    }
+
+    private ExcelParseDTO<UserExcelRowDTO> getUserExcelParseDTO(MultipartFile excelFile) throws IOException {
+        UserImportEventListener userImportEventListener = new UserImportEventListener();
+        EasyExcelFactory.read(excelFile.getInputStream(), UserTemplate.class, userImportEventListener).sheet().doRead();
+        return validateExcelUserInfo(userImportEventListener.getExcelParseDTO());
+    }
+
+    private ExcelParseDTO<UserExcelRowDTO> validateExcelUserInfo(@Valid @NotNull ExcelParseDTO<UserExcelRowDTO> excelParseDTO) {
+        List<UserExcelRowDTO> prepareSaveList = excelParseDTO.getDataList();
+        if (CollectionUtils.isNotEmpty(prepareSaveList)) {
+            Map<String, String> userInDbMap = queryChain()
+                    .where(SYSTEM_USER.EMAIL.in(prepareSaveList.stream().map(UserExcelRowDTO::getEmail).collect(Collectors.toList())))
+                    .list().stream().collect(Collectors.toMap(SystemUser::getEmail, SystemUser::getId));
+            for (UserExcelRowDTO dto : prepareSaveList) {
+                if (userInDbMap.containsKey(dto.getEmail())) {
+                    dto.setErrorMessage(Translator.get("user.email.import.in_system") + ": " + dto.getEmail());
+                    excelParseDTO.addErrorRowData(dto.getDataIndex(), dto);
+                }
+            }
+            excelParseDTO.getDataList().removeAll(excelParseDTO.getErrRowData().values());
+        }
+        return excelParseDTO;
     }
 
     private void checkUserEmail(String id, String email) {

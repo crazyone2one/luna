@@ -272,9 +272,15 @@ const {send: downloadTemplate} = useRequest(() => getUserTemplate(), {immediate:
 
 const downLoadUserTemplate = () => {
   downloadTemplate().then(res => {
+    const contentDisposition = res.headers['content-disposition']
+    let fileName = 'user_import.xlsx'; // 默认文件名
+    if (contentDisposition) {
+      // 匹配 filename="..." 格式
+      fileName = contentDisposition.match(/filename\*=utf-8''(.+)/)[1];
+    }
     const anchor = document.createElement('a');
     anchor.href = URL.createObjectURL(res.data);
-    anchor.download = 'user_import.xlsx';
+    anchor.download = fileName;
     anchor.click();
     URL.revokeObjectURL(anchor.href);
   })
@@ -293,7 +299,7 @@ const cancelImport = () => {
 const {loading: uploadLoading, send: sendUpload} = useRequest((file) => importUserInfo(file), {immediate: false})
 const importUser = () => {
   sendUpload(userImportFile.value[0].file).then(res => {
-    const {data} = res;
+    const {data} = res.data;
     const failCount = data.importCount - data.successCount;
     if (failCount === data.importCount) {
       importResult.value = 'allFail';

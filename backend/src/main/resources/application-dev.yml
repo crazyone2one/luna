@@ -5,8 +5,9 @@ spring:
     default-locale: zh_CN
   data:
     redis:
-      host: localhost
+      host: 172.16.2.15
       database: 3
+      password: 3eCrAw8Ba6Tg
   quartz:
     job-store-type: jdbc
     jdbc:

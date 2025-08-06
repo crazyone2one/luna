@@ -26,7 +26,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -150,11 +149,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         users.forEach(user -> {
             SystemUser newUser = new SystemUser();
             newUser.setId(user.getId());
-            if (user.getName().equals("admin")) {
-                newUser.setPassword(passwordEncoder.encode("Password@"));
-            } else {
-                newUser.setPassword(passwordEncoder.encode(user.getEmail()));
-            }
+            newUser.setPassword(passwordEncoder.encode(user.getEmail()));
             newUser.setUpdateUser(userName);
             mapper.update(newUser);
         });
@@ -243,7 +238,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         List<UserExcelRowDTO> prepareSaveList = excelParseDTO.getDataList();
         if (CollectionUtils.isNotEmpty(prepareSaveList)) {
             Map<String, String> userInDbMap = queryChain()
-                    .where(SYSTEM_USER.EMAIL.in(prepareSaveList.stream().map(UserExcelRowDTO::getEmail).collect(Collectors.toList())))
+                    .where(SYSTEM_USER.EMAIL.in(prepareSaveList.stream().map(UserExcelRowDTO::getEmail).toList()))
                     .list().stream().collect(Collectors.toMap(SystemUser::getEmail, SystemUser::getId));
             for (UserExcelRowDTO dto : prepareSaveList) {
                 if (userInDbMap.containsKey(dto.getEmail())) {
@@ -328,7 +323,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                 returnMap.put(userRoleRelation.getUserId(), userInfo);
             }
             SystemUserRole userRole = userRoleMap.get(userRoleRelation.getRoleId());
-            if (userRole != null && StringUtils.equalsIgnoreCase(userRole.getType(), "system")) {
+            if (userRole != null && Strings.CS.equals(userRole.getType(), "system")) {
                 userInfo.setUserRole(userRole);
             }
             SystemOrganization organization = organizationMap.get(userRoleRelation.getSourceId());

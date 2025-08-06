@@ -6,6 +6,7 @@ import cn.master.luna.handler.annotation.Log;
 import cn.master.luna.service.OperationLogService;
 import cn.master.luna.util.JacksonUtils;
 import cn.master.luna.util.SessionUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public class OperationLogAspect {
     private final StandardReflectionParameterNameDiscoverer
             discoverer = new StandardReflectionParameterNameDiscoverer();
 
-    private final static String ID = "id";
+    private static final String ID = "id";
     @Resource
     private ApplicationContext applicationContext;
 
@@ -134,18 +135,18 @@ public class OperationLogAspect {
         try {
             // 批量内容处理
             Expression expression = parser.parseExpression(msLog.expression());
-            System.out.println(expression.getValue());
-            System.out.println(context);
             Object obj = expression.getValue(context);
             if (obj == null) {
                 return;
             }
             if (obj instanceof List<?>) {
-                beforeValues.set((List<LogDTO>) obj);
+                List<LogDTO> postLogs = JacksonUtils.toJSONObject(obj, new TypeReference<>() {
+                });
+                beforeValues.set(postLogs);
             } else {
-                List<LogDTO> LogDTOs = new ArrayList<>();
-                LogDTOs.add((LogDTO) obj);
-                beforeValues.set(LogDTOs);
+                List<LogDTO> logs = new ArrayList<>();
+                logs.add((LogDTO) obj);
+                beforeValues.set(logs);
             }
 
         } catch (Exception e) {
@@ -177,24 +178,24 @@ public class OperationLogAspect {
             }
             // 批量内容处理
             Expression expression = parser.parseExpression(msLog.expression());
-            System.out.println(expression);
             Object obj = expression.getValue(context);
             if (obj == null) {
                 return;
             }
 
             if (obj instanceof List<?>) {
-                mergeLists(beforeValues.get(), (List<LogDTO>) obj);
-            } else if (obj instanceof LogDTO log) {
+                List<LogDTO> postLogs = JacksonUtils.toJSONObject(obj, new TypeReference<>() {
+                });
+                mergeLists(beforeValues.get(), postLogs);
+            } else if (obj instanceof LogDTO dto) {
                 if (CollectionUtils.isNotEmpty(beforeValues.get())) {
-                    beforeValues.get().getFirst().setModifiedValue(log.getOriginalValue());
+                    beforeValues.get().getFirst().setModifiedValue(dto.getOriginalValue());
                 } else {
-                    beforeValues.set(new ArrayList<>() {{
-                        this.add(log);
-                    }});
+                    ArrayList<LogDTO> objects = new ArrayList<>();
+                    objects.add(dto);
+                    beforeValues.set(objects);
                 }
             }
-
         } catch (Exception e) {
             log.error("未获取到details内容", e);
         }
@@ -205,7 +206,7 @@ public class OperationLogAspect {
         try {
             if (result != null) {
                 String resultStr = JacksonUtils.toJSONString(result);
-                Map object = JacksonUtils.parseMap(resultStr);
+                Map<String, Object> object = JacksonUtils.parseMap(resultStr);
                 if (MapUtils.isNotEmpty(object) && object.containsKey(ID)) {
                     Object nameValue = object.get(ID);
                     if (ObjectUtils.isNotEmpty(nameValue)) {

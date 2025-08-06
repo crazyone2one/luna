@@ -4,7 +4,6 @@ import App from './App.vue'
 import {naive} from '/@/plugins/naive.ts'
 import router from '/@/router/index.ts'
 import 'virtual:uno.css'
-import '@unocss/reset/tailwind-compat.css'
 import pinia from '/@/store'
 import directive from './directive';
 

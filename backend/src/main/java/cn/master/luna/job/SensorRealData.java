@@ -49,10 +49,10 @@ public class SensorRealData extends BaseScheduleJob {
         String header = systemProject.getNum() + ";" + systemProject.getName() + ";" + DateUtils.localDateTime2StringStyle2(now) + "^";
         List<Row> sensorList = getRow(systemProject.getNum());
         StringBuilder content = new StringBuilder();
-        if (DateUtils.isInDailyRange(11, 0, 11, 5, now)) {
+        if (DateUtils.isInDailyRange(14, 0, 14, 5, now)) {
             Row row = sensorList.get(random.nextInt(sensorList.size()));
             LocalTime nowTime = now.toLocalTime();
-            LocalTime endTime = LocalTime.of(11, 5);
+            LocalTime endTime = LocalTime.of(14, 5);
             if (nowTime.equals(endTime)) {
                 errorInfoFinish(row, content, now);
             } else {
@@ -89,7 +89,7 @@ public class SensorRealData extends BaseScheduleJob {
         content.append("80;");
         content.append(DateUtils.localDateTime2StringStyle2(localDateTime)).append(";");
         content.append(";").append(";");
-        content.append(";;;;;;");
+        content.append(";;;;;");
         content.append(DateUtils.localDateTime2StringStyle2(localDateTime)).append("^");
     }
 

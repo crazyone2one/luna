@@ -26,7 +26,7 @@
                 <version>1.15.0</version>
                 <configuration>
                     <!-- change the directory to your local node path -->
-                    <installDirectory>F:\env\nvm\v22.17.0</installDirectory>
+                    <installDirectory>F:\env\node-versions\22.18</installDirectory>
                 </configuration>
                 <executions>
                     <execution>

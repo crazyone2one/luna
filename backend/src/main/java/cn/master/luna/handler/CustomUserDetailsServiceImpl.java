@@ -3,7 +3,6 @@ package cn.master.luna.handler;
 import cn.master.luna.entity.SystemUser;
 import cn.master.luna.entity.SystemUserRole;
 import com.mybatisflex.core.query.QueryChain;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,8 +27,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
                 .innerJoin(USER_ROLE_RELATION).on(SYSTEM_USER_ROLE.ID.eq(USER_ROLE_RELATION.ROLE_ID))
                 .where(USER_ROLE_RELATION.USER_ID.eq(systemUser.getId()))
                 .listAs(String.class);
-        return new org.springframework.security.core.userdetails.User(
-                systemUser.getName(), systemUser.getPassword(), roleIds.stream().map(SimpleGrantedAuthority::new).toList()
-        );
+        systemUser.setRoleIds(roleIds);
+        return CustomUserDetails.build(systemUser);
     }
 }

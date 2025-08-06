@@ -1,5 +1,6 @@
 package cn.master.luna.util;
 
+import cn.master.luna.exception.CustomException;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParser;
@@ -57,7 +58,7 @@ public class JacksonUtils {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(e);
         }
     }
 
@@ -65,7 +66,7 @@ public class JacksonUtils {
         try {
             return objectMapper.writeValueAsBytes(value);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(e);
         }
     }
 
@@ -81,15 +82,16 @@ public class JacksonUtils {
         try {
             return objectMapper.readValue(content, javaType);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(e);
         }
     }
-    public static Map parseMap(String jsonObject) {
+
+    public static Map<String, Object> parseMap(String jsonObject) {
         try {
             return objectMapper.readValue(jsonObject, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(e);
         }
     }
 }

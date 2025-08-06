@@ -3,10 +3,11 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import UnoCSS from 'unocss/vite'
 // https://vite.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({mode}) => {
+    const isProduction = mode === 'production'
     return {
         plugins: [vue(), UnoCSS()],
-        server: {
+        server: !isProduction ? {
             proxy: {
                 '/front': {
                     target: 'http://127.0.0.1:8080/',
@@ -14,7 +15,7 @@ export default defineConfig(() => {
                     rewrite: (path: string) => path.replace(new RegExp('^/front'), ''),
                 },
             }
-        },
+        } : {},
         resolve: {
             alias: [
                 {
@@ -27,7 +28,8 @@ export default defineConfig(() => {
             rollupOptions: {
                 output: {
                     manualChunks: {
-                        'naive-ui': ['naive-ui']
+                        'naive-ui': ['naive-ui'],
+                        vue: ['vue', 'vue-router', 'pinia'],
                     }
                 }
             }
